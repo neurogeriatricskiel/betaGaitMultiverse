@@ -41,9 +41,6 @@ results/multiverse/*/branches/
 # Keep final outputs even if they match binary patterns above
 !results/multiverse/*/outputs/multiverse_results.pkl
 !results/multiverse/*/outputs/*.tsv
-!results/multiverse/*/outputs/*.png
-!results/multiverse/*/outputs/*.pdf
-!results/pipeline/*/plots/*.png
 !results/pipeline/*/qc/*.tsv
 
 # Legacy
@@ -56,15 +53,13 @@ possibleDatasets.xlsx
 # disk as a methods-validation record, untracked only; do NOT add
 # src/nodes/gedai_node.py here -- that one is tracked, in-repo pipeline
 # code cited directly by the README.
-scripts/diag_gedai_check.py
 results/pipeline/*/qc/gedai_gate_check.txt
 
-# Diagnostic / one-off investigation scripts and their reports
-scripts/diag_band_diagnostics.py
-scripts/diag_jacobsen_dataquality.py
-scripts/diag_jacobsen_baseline_check.py
+# One-off diagnostic scripts (local only) and their reports. QC scripts
+# whose numbers are reported (scripts/qc/) and their outputs in
+# results/pipeline/<dataset>/qc/ are tracked.
+scripts/diag/
 results/pipeline/*/qc/band_diagnostics.txt
-results/pipeline/jacobsen/qc/dataquality_audit.txt
 results/pipeline/jacobsen/qc/baseline_120s_check.txt
 
 # Ad-hoc run logs and throwaway launcher batch files
