@@ -1,0 +1,4 @@
+subject	stage	reason	numbers	source
+S21	reference + multiverse	AutoReject: fewer clean epochs than the 20 the ICA fit requires	12/243 clean (reject_frac 0.9506), ASR-off reference data	datasets/stepup/d00_qc/sub-S21_autoreject_recheck_qc.json (recheck script not preserved)
+S10	multiverse only (kept in reference, n = 17)	ICA: almost no brain components	1/38 brain ICs (brain_frac 0.026) in the reference ICA	datasets/stepup/d00_qc/sub-S10_ica_qc.json
+S2	multiverse only (kept in reference, n = 17)	AutoReject fails in some multiverse branches; excluded from all universes as one subject-level decision	HP 0.5 ASR sd20: 6/243 clean; HP 1.0 ASR sd20: 12/243 clean (2 of 9 branches fail)	datasets/stepup/d00_qc/sub-S2_multiverse_branch_autoreject_check_qc.json (branch-check script not preserved)

@@ -1,0 +1,181 @@
+subject	setting	configured	applied	match
+001	highpass_hz	0.2	0.20000000298023224	True
+001	lowpass_hz	60.0	60.0	True
+001	sfreq_hz	250.0	250.0	True
+001	notch_applied	True	True	True
+001	use_asr	True	True	True
+001	asr_cutoff	20.0	20.0	True
+001	ica_method	infomax extended	infomax extended	True
+001	ica_variance	0.99	0.99	True
+001	ica_fit_highpass_hz	2.0	2.0	True
+001	notch_db_at_line_freq	< -3.0	-6.6	True
+002	highpass_hz	0.2	0.20000000298023224	True
+002	lowpass_hz	60.0	60.0	True
+002	sfreq_hz	250.0	250.0	True
+002	notch_applied	True	True	True
+002	use_asr	True	True	True
+002	asr_cutoff	20.0	20.0	True
+002	ica_method	infomax extended	infomax extended	True
+002	ica_variance	0.99	0.99	True
+002	ica_fit_highpass_hz	2.0	2.0	True
+002	notch_db_at_line_freq	< -3.0	-17.4	True
+003	highpass_hz	0.2	0.20000000298023224	True
+003	lowpass_hz	60.0	60.0	True
+003	sfreq_hz	250.0	250.0	True
+003	notch_applied	True	True	True
+003	use_asr	True	True	True
+003	asr_cutoff	20.0	20.0	True
+003	ica_method	infomax extended	infomax extended	True
+003	ica_variance	0.99	0.99	True
+003	ica_fit_highpass_hz	2.0	2.0	True
+003	notch_db_at_line_freq	< -3.0	-8.3	True
+004	highpass_hz	0.2	0.20000000298023224	True
+004	lowpass_hz	60.0	60.0	True
+004	sfreq_hz	250.0	250.0	True
+004	notch_applied	True	True	True
+004	use_asr	True	True	True
+004	asr_cutoff	20.0	20.0	True
+004	ica_method	infomax extended	infomax extended	True
+004	ica_variance	0.99	0.99	True
+004	ica_fit_highpass_hz	2.0	2.0	True
+004	notch_db_at_line_freq	< -3.0	-10.5	True
+005	highpass_hz	0.2	0.20000000298023224	True
+005	lowpass_hz	60.0	60.0	True
+005	sfreq_hz	250.0	250.0	True
+005	notch_applied	True	True	True
+005	use_asr	True	True	True
+005	asr_cutoff	20.0	20.0	True
+005	ica_method	infomax extended	infomax extended	True
+005	ica_variance	0.99	0.99	True
+005	ica_fit_highpass_hz	2.0	2.0	True
+005	notch_db_at_line_freq	< -3.0	-17.4	True
+006	highpass_hz	0.2	0.20000000298023224	True
+006	lowpass_hz	60.0	60.0	True
+006	sfreq_hz	250.0	250.0	True
+006	notch_applied	True	True	True
+006	use_asr	True	True	True
+006	asr_cutoff	20.0	20.0	True
+006	ica_method	infomax extended	infomax extended	True
+006	ica_variance	0.99	0.99	True
+006	ica_fit_highpass_hz	2.0	2.0	True
+006	notch_db_at_line_freq	< -3.0	-18.1	True
+007	highpass_hz	0.2	0.20000000298023224	True
+007	lowpass_hz	60.0	60.0	True
+007	sfreq_hz	250.0	250.0	True
+007	notch_applied	True	True	True
+007	use_asr	True	True	True
+007	asr_cutoff	20.0	20.0	True
+007	ica_method	infomax extended	infomax extended	True
+007	ica_variance	0.99	0.99	True
+007	ica_fit_highpass_hz	2.0	2.0	True
+007	notch_db_at_line_freq	< -3.0	-17.4	True
+008	highpass_hz	0.2	0.20000000298023224	True
+008	lowpass_hz	60.0	60.0	True
+008	sfreq_hz	250.0	250.0	True
+008	notch_applied	True	True	True
+008	use_asr	True	True	True
+008	asr_cutoff	20.0	20.0	True
+008	ica_method	infomax extended	infomax extended	True
+008	ica_variance	0.99	0.99	True
+008	ica_fit_highpass_hz	2.0	2.0	True
+008	notch_db_at_line_freq	< -3.0	-18.1	True
+009	highpass_hz	0.2	0.20000000298023224	True
+009	lowpass_hz	60.0	60.0	True
+009	sfreq_hz	250.0	250.0	True
+009	notch_applied	True	True	True
+009	use_asr	True	True	True
+009	asr_cutoff	20.0	20.0	True
+009	ica_method	infomax extended	infomax extended	True
+009	ica_variance	0.99	0.99	True
+009	ica_fit_highpass_hz	2.0	2.0	True
+009	notch_db_at_line_freq	< -3.0	-21.0	True
+010	highpass_hz	0.2	0.20000000298023224	True
+010	lowpass_hz	60.0	60.0	True
+010	sfreq_hz	250.0	250.0	True
+010	notch_applied	True	True	True
+010	use_asr	True	True	True
+010	asr_cutoff	20.0	20.0	True
+010	ica_method	infomax extended	infomax extended	True
+010	ica_variance	0.99	0.99	True
+010	ica_fit_highpass_hz	2.0	2.0	True
+010	notch_db_at_line_freq	< -3.0	-13.5	True
+011	highpass_hz	0.2	0.20000000298023224	True
+011	lowpass_hz	60.0	60.0	True
+011	sfreq_hz	250.0	250.0	True
+011	notch_applied	True	True	True
+011	use_asr	True	True	True
+011	asr_cutoff	20.0	20.0	True
+011	ica_method	infomax extended	infomax extended	True
+011	ica_variance	0.99	0.99	True
+011	ica_fit_highpass_hz	2.0	2.0	True
+011	notch_db_at_line_freq	< -3.0	-18.6	True
+012	highpass_hz	0.2	0.20000000298023224	True
+012	lowpass_hz	60.0	60.0	True
+012	sfreq_hz	250.0	250.0	True
+012	notch_applied	True	True	True
+012	use_asr	True	True	True
+012	asr_cutoff	20.0	20.0	True
+012	ica_method	infomax extended	infomax extended	True
+012	ica_variance	0.99	0.99	True
+012	ica_fit_highpass_hz	2.0	2.0	True
+012	notch_db_at_line_freq	< -3.0	-7.1	True
+013	highpass_hz	0.2	0.20000000298023224	True
+013	lowpass_hz	60.0	60.0	True
+013	sfreq_hz	250.0	250.0	True
+013	notch_applied	True	True	True
+013	use_asr	True	True	True
+013	asr_cutoff	20.0	20.0	True
+013	ica_method	infomax extended	infomax extended	True
+013	ica_variance	0.99	0.99	True
+013	ica_fit_highpass_hz	2.0	2.0	True
+013	notch_db_at_line_freq	< -3.0	-21.0	True
+014	highpass_hz	0.2	0.20000000298023224	True
+014	lowpass_hz	60.0	60.0	True
+014	sfreq_hz	250.0	250.0	True
+014	notch_applied	True	True	True
+014	use_asr	True	True	True
+014	asr_cutoff	20.0	20.0	True
+014	ica_method	infomax extended	infomax extended	True
+014	ica_variance	0.99	0.99	True
+014	ica_fit_highpass_hz	2.0	2.0	True
+014	notch_db_at_line_freq	< -3.0	-15.2	True
+015	highpass_hz	0.2	0.20000000298023224	True
+015	lowpass_hz	60.0	60.0	True
+015	sfreq_hz	250.0	250.0	True
+015	notch_applied	True	True	True
+015	use_asr	True	True	True
+015	asr_cutoff	20.0	20.0	True
+015	ica_method	infomax extended	infomax extended	True
+015	ica_variance	0.99	0.99	True
+015	ica_fit_highpass_hz	2.0	2.0	True
+015	notch_db_at_line_freq	< -3.0	-13.4	True
+016	highpass_hz	0.2	0.20000000298023224	True
+016	lowpass_hz	60.0	60.0	True
+016	sfreq_hz	250.0	250.0	True
+016	notch_applied	True	True	True
+016	use_asr	True	True	True
+016	asr_cutoff	20.0	20.0	True
+016	ica_method	infomax extended	infomax extended	True
+016	ica_variance	0.99	0.99	True
+016	ica_fit_highpass_hz	2.0	2.0	True
+016	notch_db_at_line_freq	< -3.0	-16.1	True
+017	highpass_hz	0.2	0.20000000298023224	True
+017	lowpass_hz	60.0	60.0	True
+017	sfreq_hz	250.0	250.0	True
+017	notch_applied	True	True	True
+017	use_asr	True	True	True
+017	asr_cutoff	20.0	20.0	True
+017	ica_method	infomax extended	infomax extended	True
+017	ica_variance	0.99	0.99	True
+017	ica_fit_highpass_hz	2.0	2.0	True
+017	notch_db_at_line_freq	< -3.0	-8.4	True
+018	highpass_hz	0.2	0.20000000298023224	True
+018	lowpass_hz	60.0	60.0	True
+018	sfreq_hz	250.0	250.0	True
+018	notch_applied	True	True	True
+018	use_asr	True	True	True
+018	asr_cutoff	20.0	20.0	True
+018	ica_method	infomax extended	infomax extended	True
+018	ica_variance	0.99	0.99	True
+018	ica_fit_highpass_hz	2.0	2.0	True
+018	notch_db_at_line_freq	< -3.0	-14.6	True

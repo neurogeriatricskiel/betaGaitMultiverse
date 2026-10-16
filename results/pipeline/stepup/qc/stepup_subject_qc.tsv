@@ -1,0 +1,19 @@
+subject	n_channels_analysed	bad_channels_interpolated	highpass_applied_hz	asr	ica_components	brain_ics_kept	autoreject_epochs_clean	autoreject_epochs_total	cycles_detected	cycles_extracted	cycles_used_ersp	in_reference	in_multiverse	flag_worst_stage	flags	note
+S1	64.0	not recorded	1.0	off	38	14	80.0	240	302	302	302	True	True	pass	gait_events=pass;preprocessing=pass;ica=pass;gait_epochs=pass;ersp=pass	
+S2	64.0	not recorded	1.0	off	20	9	40.0	243	279	279	279	True	False	pass	gait_events=pass;preprocessing=pass;ica=pass;gait_epochs=pass;ersp=pass	
+S3	64.0	not recorded	1.0	off	33	17	70.0	241	283	283	283	True	True	pass	gait_events=pass;preprocessing=pass;ica=pass;gait_epochs=pass;ersp=pass	
+S4	64.0	not recorded	1.0	off	38	9	204.0	240	296	296	296	True	True	pass	gait_events=pass;preprocessing=pass;ica=pass;gait_epochs=pass;ersp=pass	
+S7	64.0	not recorded	1.0	off	34	9	184.0	241	273	273	273	True	True	pass	gait_events=pass;preprocessing=pass;ica=pass;gait_epochs=pass;ersp=pass	
+S9	64.0	not recorded	1.0	off	37	7	45.0	241	274	274	274	True	True	pass	gait_events=pass;preprocessing=pass;ica=pass;gait_epochs=pass;ersp=pass	
+S10	64.0	not recorded	1.0	off	38	1	31.0	240	274	274	274	True	False	warn	gait_events=pass;preprocessing=warn;ica=warn;gait_epochs=pass;ersp=pass	
+S11	64.0	not recorded	1.0	off	31	15	75.0	242	286	285	285	True	True	pass	gait_events=pass;preprocessing=pass;ica=pass;gait_epochs=pass;ersp=pass	
+S12	64.0	not recorded	1.0	off	35	4	116.0	242	286	286	286	True	True	warn	gait_events=pass;preprocessing=pass;ica=warn;gait_epochs=pass;ersp=pass	
+S13	64.0	not recorded	1.0	off	32	13	188.0	241	272	272	272	True	True	pass	gait_events=pass;preprocessing=pass;ica=pass;gait_epochs=pass;ersp=pass	
+S14	64.0	not recorded	1.0	off	32	8	114.0	243	297	297	297	True	True	pass	gait_events=pass;preprocessing=pass;ica=pass;gait_epochs=pass;ersp=pass	
+S15	64.0	not recorded	1.0	off	33	11	240.0	241	276	276	276	True	True	pass	gait_events=pass;preprocessing=pass;ica=pass;gait_epochs=pass;ersp=pass	
+S16	64.0	not recorded	1.0	off	32	7	212.0	243	280	280	280	True	True	pass	gait_events=pass;preprocessing=pass;ica=pass;gait_epochs=pass;ersp=pass	
+S17	64.0	not recorded	1.0	off	27	12	240.0	241	281	280	280	True	True	pass	gait_events=pass;preprocessing=pass;ica=pass;gait_epochs=pass;ersp=pass	
+S18	64.0	not recorded	1.0	off	21	10	189.0	243	286	286	286	True	True	pass	gait_events=pass;preprocessing=pass;ica=pass;gait_epochs=pass;ersp=pass	
+S20	64.0	not recorded	1.0	off	29	10	234.0	244	285	285	285	True	True	pass	gait_events=pass;preprocessing=pass;ica=pass;gait_epochs=pass;ersp=pass	
+S21		not recorded	1.0	SD 20	28	7		243	307	307	307	False	False	pass	gait_events=pass;preprocessing=pass;ica=pass;gait_epochs=pass;ersp=pass	QC jsons are from an earlier run with a different ASR setting; the current reference run failed (see exclusions)
+S23	64.0	not recorded	1.0	off	27	16	208.0	241	264	264	264	True	True	pass	gait_events=pass;preprocessing=pass;ica=pass;gait_epochs=pass;ersp=pass	

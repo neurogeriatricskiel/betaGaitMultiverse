@@ -1,0 +1,13 @@
+ERSP of stationary Gaussian noise (true change 0 dB): beta 13-30 Hz, channel mean
+  20 seeds x 8 channels; standing 240 s (2 s epochs, linear mean power); 230 cycles per seed drawn from 3865 overground cycles (duration 0.94-1.90 s, median 1.08 s); Morlet n_cycles = f/2, 8-60 Hz, 5% edge crop, 250 Hz; warp anchors (18.0, 50.0, 68.0)
+  Expected bias of the mean of log power: 10*log10(e)*(-0.5772) = -2.507 dB
+
+white noise:
+  ours         : mean -2.559 dB  SD 0.026  range -2.599 to -2.519 dB  (vs -2.507: -0.052)
+  source       : mean -0.067 dB  SD 0.027  range -0.115 to -0.025 dB  (vs -2.507: +2.440)
+  ours - source: mean -2.492 dB  SD 0.008  range -2.505 to -2.476 dB  (vs -2.507: +0.015)
+
+1/f noise:
+  ours         : mean -2.516 dB  SD 0.027  range -2.558 to -2.475 dB  (vs -2.507: -0.009)
+  source       : mean -0.023 dB  SD 0.027  range -0.074 to +0.021 dB  (vs -2.507: +2.484)
+  ours - source: mean -2.493 dB  SD 0.008  range -2.506 to -2.476 dB  (vs -2.507: +0.014)

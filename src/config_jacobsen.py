@@ -1,20 +1,21 @@
-"""
-Per-dataset settings: Jacobsen et al. 2020 outdoor free-walking study
-(OpenNeuro ds003039, "A walk in the park?", task-neurCorrYoung).
+"""Per-dataset settings of the overground dataset (key "jacobsen").
 
-Encodes everything the shared canonical pipeline needs to treat this
-dataset like stepUpAms -- EEGLAB file format, gait events read from the
-dataset's own BIDS events.tsv (not detected), and a provisional
-fixed-window resting baseline. See the ds003039 inventory report for
-full background on every choice documented below.
+Jacobsen et al. 2020 outdoor free-walking study (OpenNeuro ds003039,
+"A walk in the park?", task-neurCorrYoung).
+
+Encodes everything the shared
+reference pipeline needs to treat this dataset like the treadmill one --
+EEGLAB file format, gait events read from the dataset's own BIDS
+events.tsv (not detected), and the start_standing - end_standing
+quiet-standing baseline.
 
 Pure data module: no filesystem access, no imports from src.config,
 so it can be imported by src.config without a circular import.
 """
 
-DATASET      = "jacobsen"
-ACCESSION    = "ds003039"
-ROOT_DIRNAME = "jacobsen"   # datasets/jacobsen/
+DATASET = "jacobsen"
+ACCESSION = "ds003039"
+ROOT_DIRNAME = "jacobsen"  # datasets/jacobsen/
 
 # sub-001 .. sub-019 (BIDS zero-padded 3-digit IDs; N=19, all young adults 19-32y)
 # All 19 subjects' raw data are downloaded (see
@@ -29,7 +30,7 @@ ROOT_DIRNAME = "jacobsen"   # datasets/jacobsen/
 # .set header's declared sample count doesn't match the actual .fdt
 # payload. Re-downloading does not help, so it is excluded outright
 # (usable N = 18) rather than left to fail per-subject at runtime.
-SUBJECTS = [f"{i:03d}" for i in range(1, 19)]   # sub-001..sub-018 (sub-019 excluded, see above)
+SUBJECTS = [f"{i:03d}" for i in range(1, 19)]  # sub-001..sub-018 (sub-019 excluded, see above)
 
 # NOTE -- sub-018's raw .set has 6 extra channels (Left/Right_
 # Accelerometer_X/Y/Z) not listed in its own *_channels.tsv (a BIDS
@@ -41,19 +42,24 @@ SUBJECTS = [f"{i:03d}" for i in range(1, 19)]   # sub-001..sub-018 (sub-019 excl
 # the existing no-position-channel cleanup in fit_ica()/apply_ica() --
 # verified, no code change needed.
 
-# Multiverse cohort not yet validated for this dataset -- the canonical
-# pipeline (prepana01-07) has only been run end-to-end on a 3-subject
-# test slice so far (see Step 5 verification). Provisionally the full
-# cohort; revisit once ICA/AutoReject QC has been reviewed per subject,
-# the way S2/S10/S21 were excluded for stepUpAms.
+# Multiverse cohort = all 18 subjects (no ICA/AutoReject exclusion was
+# needed, unlike treadmill S2/S10/S21). The source dataset contains
+# duplicate recordings (sub-005 == sub-007 and sub-009 == sub-013 exact;
+# sub-006/008 inconsistent events -- results/pipeline/jacobsen/qc/
+# jacobsen_duplicate_recordings.txt). They are handled at the reporting layer:
+# the primary statistic and the multiverse pkl's per-universe
+# "dedup_diffs" field use the 14-subject primary cohort.
 MULTIVERSE_SUBJECTS = SUBJECTS
 
 # --- Recording / file format ---
-EEG_FORMAT = "eeglab"          # .set/.fdt, loaded via mne.io.read_raw_eeglab
-TASK_NAME  = "neurCorrYoung"   # single BIDS task; one continuous ~50 min recording per subject
-EEG_SFREQ_NATIVE  = 500.0      # Hz, matches sub-*_eeg.json SamplingFrequency and events.tsv's "sample" column
-MONTAGE_SOURCE    = "electrodes_tsv"  # positions read from BIDS electrodes.tsv, NOT a standard template
-EEG_REFERENCE_RAW = "common"   # generic online reference per BIDS eeg.json; pipeline re-references to average regardless, so this is inert
+EEG_FORMAT = "eeglab"  # .set/.fdt, loaded via mne.io.read_raw_eeglab
+TASK_NAME = "neurCorrYoung"  # single BIDS task; one continuous ~50 min recording per subject
+EEG_SFREQ_NATIVE = (
+    500.0  # Hz, matches sub-*_eeg.json SamplingFrequency and events.tsv's "sample" column
+)
+MONTAGE_SOURCE = (
+    "electrodes_tsv"  # positions read from BIDS electrodes.tsv, NOT a standard template
+)
 
 # --- Gait event source ---
 # Gait events (LeftHS/RightHS/LeftTO/RightTO) are pre-computed by the
@@ -80,7 +86,7 @@ GAIT_EVENT_VALUES = {
 # --- Segment: steady-state even-terrain walking WITHOUT button presses ---
 # (excludes the *_button variants -- see inventory report step 3c)
 SEGMENT_START_VALUE = "start_easy"
-SEGMENT_END_VALUE   = "end_easy"
+SEGMENT_END_VALUE = "end_easy"
 
 # --- Baseline: VALIDATED, paper-faithful (2026-08-10) ---
 # Baseline: the dataset's own start_standing -> end_standing window (a
@@ -101,22 +107,18 @@ SEGMENT_END_VALUE   = "end_easy"
 # results/pipeline/jacobsen/_archive_asr20_restEEG_reference/ for the
 # prior baseline's outputs, kept for comparison.
 BASELINE_START_VALUE = "start_standing"
-BASELINE_END_VALUE   = "end_standing"
+BASELINE_END_VALUE = "end_standing"
 
-# --- Reference-pipeline-only paper-faithful overrides (2026-08-10) -----
-# These apply ONLY to the canonical/reference pipeline (prepana02-07),
+# --- Reference-pipeline-only overrides (source-study values) ----------
+# These apply ONLY to the reference pipeline (prepana02-07),
 # not to the multiverse (mulana01/02/03, src.multiverse_pipeline), which
 # keeps its own dataset-agnostic 3x3x3 grid (highpass_hz/asr_mode/
-# iclabel_rule) identical between stepUpAms and Jacobsen -- see NOTES.md
+# iclabel_rule) identical between stepUpAms and Jacobsen -- see docs/decisions.md
 # for the rationale (two different reference pipelines, one identical
 # multiverse, is the intentional design).
 #
-#   REFERENCE_HIGHPASS_HZ         -- main analysis high-pass (Jacobsen et
-#                                     al.'s own 0.2 Hz, OFF the multiverse's
-#                                     highpass grid {0.5, 1, 2} -- the
-#                                     reference is not meant to be a grid
-#                                     vertex here, unlike stepUpAms's
-#                                     reference == universe_17).
+#   REFERENCE_HIGHPASS_HZ         -- the source study's 0.2 Hz analysis
+#                                     high-pass (prepana02).
 #   REFERENCE_ICA_FIT_HIGHPASS_HZ -- separate, more aggressive high-pass
 #                                     (paper's ICA_bandpass_fmin) applied
 #                                     ONLY to the copy of the data ICA is
@@ -143,13 +145,17 @@ BASELINE_END_VALUE   = "end_standing"
 #                                     group-median anchors from
 #                                     group_gait_event_anchors_frozen.json,
 #                                     same as stepUpAms.
-REFERENCE_HIGHPASS_HZ         = 0.2
+REFERENCE_HIGHPASS_HZ = 0.2
 REFERENCE_ICA_FIT_HIGHPASS_HZ = 2.0
-REFERENCE_WARP_ANCHORS_PCT    = (18.0, 50.0, 68.0)   # (A_lto, A_lhs, A_rto)
+REFERENCE_WARP_ANCHORS_PCT = (18.0, 50.0, 68.0)  # (A_lto, A_lhs, A_rto)
+
+# Overground reference ASR: SD 20 burst correction (src.config.ASR_CUTOFF).
+# Default of src.config.USE_ASR for this dataset; BETAGAIT_USE_ASR overrides.
+REFERENCE_USE_ASR = True
 
 # --- Documented deviations from Jacobsen et al.'s own pipeline ---------
 # The reference pipeline reproduces the paper's preprocessing choices
-# with THREE known deviations (all deliberate project decisions, not
+# with FOUR known differences (all deliberate project decisions, not
 # oversights -- record for the manuscript):
 #
 #   1. ICA: Extended Infomax (src.config.ICA_METHOD="infomax",
@@ -167,13 +173,14 @@ REFERENCE_WARP_ANCHORS_PCT    = (18.0, 50.0, 68.0)   # (A_lto, A_lhs, A_rto)
 #      rather than hand-approximate it, this was an explicit decision
 #      (2026-08-10) to keep the existing, already-validated ASR=20
 #      burst-correction path unchanged for Jacobsen's reference pipeline.
+#   4. No spectral PCA step (the source pipeline applies one before its
+#      GPM figures).
 
-# --- Annotation names the shared pipeline crops on (see src.pipeline_steps) ---
-# Both reuse the exact names stepUpAms's pipeline_steps/prepana04-07/
-# multiverse_pipeline already crop by, so no downstream script branches
-# on dataset.
-BASELINE_ANNOTATION = "STAND"   # <- BASELINE_START_VALUE + BASELINE_DURATION_S window
-WALK_ANNOTATION     = "CS"      # <- SEGMENT_START_VALUE .. SEGMENT_END_VALUE window
+# --- Annotations ---
+# The EEGLAB loader (src.pipeline_steps) annotates the
+# BASELINE_START_VALUE .. BASELINE_END_VALUE window (240 s) as "STAND" and
+# the SEGMENT_START_VALUE .. SEGMENT_END_VALUE window as "CS", the names the
+# treadmill recordings use, so no later stage branches on the dataset.
 
 # --- Known limitation: turns ---
 # ds003039 provides no turn markers, heading, or route/GPS data -- only
@@ -181,18 +188,17 @@ WALK_ANNOTATION     = "CS"      # <- SEGMENT_START_VALUE .. SEGMENT_END_VALUE wi
 # original authors solely to classify gait-*initiation* direction, not
 # for continuous heading. Turns within the "easy" outdoor walking bout
 # cannot be detected or excluded from this dataset. Accepted limitation.
-TURNS_DETECTABLE = False
 
 # Directory layout, relative to datasets/jacobsen/ -- identical keys to
 # config_stepup.DIRS so src.paths.get_dataset_dirs() and every shared
 # script work unchanged regardless of which dataset is active.
 DIRS = {
-    "qc":          "d00_qc",
-    "raw":         "d00_raw",
+    "qc": "d00_qc",
+    "raw": "d00_raw",
     "gait_events": "d01_gaitevents",
-    "prep":        "d02_prep",
-    "clean":       "d03_clean",
-    "gaitepochs":  "d04_gaitepochs",
-    "ersp":        "d05_ersp",
-    "roi_topo":    "d05_roi_topo",
+    "prep": "d02_prep",
+    "clean": "d03_clean",
+    "gaitepochs": "d04_gaitepochs",
+    "ersp": "d05_ersp",
+    "roi_topo": "d05_roi_topo",
 }

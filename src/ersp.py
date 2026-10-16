@@ -1,29 +1,43 @@
 """
-Shared event-anchored gait-cycle warping and beta double-stance-vs-swing
-phase-contrast logic.
+Shared event-anchored gait-cycle warping and beta phase-contrast logic.
+
+The contrast is beta power in double stance versus swing.
 
 Single source of truth for the warp/phase-split/beta-reduction math used
-identically by the canonical pipeline (prepana05_gaitcycles2tfr.py,
+identically by the reference pipeline (prepana05_gaitcycles2tfr.py,
 prepana07_betaphase_stats.py) and the multiverse pipeline
 (multiverse_pipeline.py), so every universe computes the same contrast
-definition the canonical pipeline validated.
+definition as the reference pipeline.
 """
 
+from __future__ import annotations
+
 import json
+from typing import TYPE_CHECKING
 
 import mne
 import numpy as np
 
-from src.spatial_filter import apply_linear_roi
 from src.config import (
-    BETA_FMIN, BETA_FMAX, TFR_N_POINTS, TFR_EDGE_CROP, AMP_THRESH,
+    AMP_THRESH,
     BASELINE_EPOCH_DUR_S,
+    BETA_FMAX,
+    BETA_FMIN,
+    TFR_EDGE_CROP,
+    TFR_N_POINTS,
 )
+from src.spatial_filter import apply_linear_roi
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+    from pathlib import Path
 
 
-def load_group_anchors(ersp_dir):
+def load_group_anchors(ersp_dir: Path) -> tuple[float, float, float]:
     """
-    Load the group-median gait-event anchors: a FROZEN calibration input
+    Load the frozen group-median gait-event anchors.
+
+    The anchors are a FROZEN calibration input
     (group_gait_event_anchors_frozen.json), not recomputed here or by any
     pipeline run.
 
@@ -62,10 +76,11 @@ def load_group_anchors(ersp_dir):
     return anchors["A_lto_pct"], anchors["A_lhs_pct"], anchors["A_rto_pct"]
 
 
-def load_reference_anchors(ersp_dir):
+def load_reference_anchors(ersp_dir: Path) -> tuple[float, ...]:
     """
-    Warp anchors for the REFERENCE pipeline only (prepana05/06/07) --
-    computed group-median (via load_group_anchors above) UNLESS the
+    Return the warp anchors for the REFERENCE pipeline only (prepana05/06/07).
+
+    Computed group-median (via load_group_anchors above) UNLESS the
     active dataset defines a fixed override, src.config.
     REFERENCE_WARP_ANCHORS_PCT (currently: Jacobsen only, paper's fixed
     warp latencies gait_event_newLat=[1,18,50,68,100] expressed as
@@ -88,23 +103,32 @@ def load_reference_anchors(ersp_dir):
     Returns
     -------
     (A_lto, A_lhs, A_rto) : tuple of float
+        Percent of gait cycle (0-100) for each event anchor.
     """
     from src import config
+
     # getattr, not a hard import: only config_jacobsen.py defines this
     # attribute; config_stepup.py deliberately does not (stepUpAms is
     # untouched and always falls through to load_group_anchors below).
     fixed = getattr(config, "REFERENCE_WARP_ANCHORS_PCT", None)
     if fixed is not None:
-        print(f"  Reference warp anchors: FIXED (paper-imposed, not data-"
-              f"derived) = {fixed}")
+        print(f"  Reference warp anchors: FIXED (paper-imposed, not data-derived) = {fixed}")
         return tuple(fixed)
     return load_group_anchors(ersp_dir)
 
 
-def warp_cycle_to_grid(power, lto_idx, lhs_idx, rto_idx, anchors, n_points=TFR_N_POINTS):
+def warp_cycle_to_grid(
+    power: np.ndarray,
+    lto_idx: int,
+    lhs_idx: int,
+    rto_idx: int,
+    anchors: Sequence[float],
+    n_points: int = TFR_N_POINTS,
+) -> np.ndarray:
     """
-    Piecewise-linear (4-segment) time-warp of one cycle's power time
-    series onto the common 0-100% grid, pinning this cycle's own
+    Time-warp one cycle's power onto the common 0-100% grid.
+
+    Piecewise-linear (4-segment) warp that pins this cycle's own
     LTO/LHS/RTO sample positions to the group-median anchor percentages.
 
     Parameters
@@ -123,6 +147,7 @@ def warp_cycle_to_grid(power, lto_idx, lhs_idx, rto_idx, anchors, n_points=TFR_N
     Returns
     -------
     ndarray, shape (n_ch, n_freqs, n_points)
+        Warped power.
 
     Raises
     ------
@@ -134,23 +159,26 @@ def warp_cycle_to_grid(power, lto_idx, lhs_idx, rto_idx, anchors, n_points=TFR_N
     n_t = power.shape[-1]
     if not (0 < lto_idx < lhs_idx < rto_idx < n_t - 1):
         raise ValueError(
-            f"Invalid event order for warp: lto={lto_idx} lhs={lhs_idx} "
-            f"rto={rto_idx} n_t={n_t}"
+            f"Invalid event order for warp: lto={lto_idx} lhs={lhs_idx} rto={rto_idx} n_t={n_t}"
         )
     old_bp = np.array([0, lto_idx, lhs_idx, rto_idx, n_t - 1], dtype=float)
     pct_bp = np.array([0.0, A_lto, A_lhs, A_rto, 100.0])
-    x_old  = np.interp(np.arange(n_t), old_bp, pct_bp)   # warped time axis, in %
-    x_new  = np.linspace(0, 100, n_points)
-    return np.stack([
-        np.stack([np.interp(x_new, x_old, power[ch, f])
-                  for f in range(power.shape[1])])
-        for ch in range(power.shape[0])
-    ])   # (n_ch, n_freqs, n_points)
+    x_old = np.interp(np.arange(n_t), old_bp, pct_bp)  # warped time axis, in %
+    x_new = np.linspace(0, 100, n_points)
+    return np.stack(
+        [
+            np.stack([np.interp(x_new, x_old, power[ch, f]) for f in range(power.shape[1])])
+            for ch in range(power.shape[0])
+        ]
+    )  # (n_ch, n_freqs, n_points)
 
 
-def phase_split_indices(anchors, n_points=TFR_N_POINTS):
+def phase_split_indices(
+    anchors: Sequence[float],
+    n_points: int = TFR_N_POINTS,
+) -> tuple[np.ndarray, np.ndarray]:
     """
-    Fixed double-stance / swing index ranges on the common warped grid.
+    Return the fixed double-stance / swing index ranges on the warped grid.
 
     Double support occurs twice per gait cycle (initial DS: 0 -> LTO;
     terminal DS: LHS -> RTO); swing likewise occurs twice (LTO -> LHS,
@@ -175,20 +203,29 @@ def phase_split_indices(anchors, n_points=TFR_N_POINTS):
     idx_lhs = int(round(A_lhs / 100 * (n_points - 1)))
     idx_rto = int(round(A_rto / 100 * (n_points - 1)))
 
-    double_stance_idx = np.concatenate([
-        np.arange(0, idx_lto),
-        np.arange(idx_lhs, idx_rto),
-    ])
-    swing_idx = np.concatenate([
-        np.arange(idx_lto, idx_lhs),
-        np.arange(idx_rto, n_points),
-    ])
+    double_stance_idx = np.concatenate(
+        [
+            np.arange(0, idx_lto),
+            np.arange(idx_lhs, idx_rto),
+        ]
+    )
+    swing_idx = np.concatenate(
+        [
+            np.arange(idx_lto, idx_lhs),
+            np.arange(idx_rto, n_points),
+        ]
+    )
     return double_stance_idx, swing_idx
 
 
 def compute_standing_baseline(
-    raw_stand, freqs, n_cycles, edge_crop=TFR_EDGE_CROP, amp_thresh=AMP_THRESH, epoch_dur=BASELINE_EPOCH_DUR_S,
-):
+    raw_stand: mne.io.BaseRaw,
+    freqs: np.ndarray,
+    n_cycles: np.ndarray,
+    edge_crop: float = TFR_EDGE_CROP,
+    amp_thresh: float = AMP_THRESH,
+    epoch_dur: float = BASELINE_EPOCH_DUR_S,
+) -> np.ndarray:
     """
     Compute standing-baseline Morlet power for ERSP normalization.
 
@@ -217,6 +254,7 @@ def compute_standing_baseline(
     Returns
     -------
     baseline_power : ndarray, shape (n_ch, n_freqs)
+        Mean power over kept epochs and time.
 
     Raises
     ------
@@ -225,8 +263,10 @@ def compute_standing_baseline(
     """
     events = mne.make_fixed_length_events(raw_stand, duration=epoch_dur)
     stand_epochs = mne.Epochs(
-        raw_stand, events,
-        tmin=0, tmax=epoch_dur,
+        raw_stand,
+        events,
+        tmin=0,
+        tmax=epoch_dur,
         baseline=None,
         preload=True,
         reject_by_annotation=False,
@@ -253,18 +293,24 @@ def compute_standing_baseline(
     if not tfr_list:
         raise RuntimeError("All standing epochs rejected -- cannot compute baseline")
 
-    stack = np.stack(tfr_list)   # (n_kept, n_ch, n_freqs, n_time_cropped)
-    return stack.mean(axis=(0, 3))   # (n_ch, n_freqs)
+    stack = np.stack(tfr_list)  # (n_kept, n_ch, n_freqs, n_time_cropped)
+    return stack.mean(axis=(0, 3))  # (n_ch, n_freqs)
 
 
-def beta_roi_scalar(ersp_map, weights, freqs, fmin=BETA_FMIN, fmax=BETA_FMAX):
+def beta_roi_scalar(
+    ersp_map: np.ndarray,
+    weights: np.ndarray,
+    freqs: np.ndarray,
+    fmin: float = BETA_FMIN,
+    fmax: float = BETA_FMAX,
+) -> float:
     """
-    Reduce a (n_ch, n_freqs) ERSP map to a single beta-band scalar using
-    linear Cz-ROI channel weights.
+    Reduce an ERSP map to a single beta-band scalar with linear ROI weights.
 
     Parameters
     ----------
     ersp_map : ndarray, shape (n_ch, n_freqs)
+        ERSP map.
     weights  : ndarray, shape (n_ch,)
         From src.spatial_filter.linear_roi_weights().
     freqs    : ndarray, shape (n_freqs,)
@@ -275,7 +321,8 @@ def beta_roi_scalar(ersp_map, weights, freqs, fmin=BETA_FMIN, fmax=BETA_FMAX):
     Returns
     -------
     float
+        Mean ROI value over ``fmin <= freqs <= fmax``.
     """
-    roi  = apply_linear_roi(ersp_map, weights)   # (n_freqs,)
+    roi = apply_linear_roi(ersp_map, weights)  # (n_freqs,)
     mask = (freqs >= fmin) & (freqs <= fmax)
     return float(roi[mask].mean())

@@ -1,27 +1,29 @@
 """
 Preprocessing utilities for EEG data.
+
 Covers every step from raw segmented data up to pre-ICA clean epochs.
 """
 
-import numpy as np
 import mne
-from pathlib import Path
+import numpy as np
 
 
-def drop_invalid_channels(raw):
-    """Drop channels with missing or zero electrode positions."""
+def drop_invalid_channels(raw: mne.io.BaseRaw) -> mne.io.BaseRaw:
+    """Drop non-EEG bookkeeping channels (status, counter, source) by name.
 
-    invalid_labels = [
-        "status",
-        "counter",
-        "counter 2power24",
-        "source"
-    ]
+    Parameters
+    ----------
+    raw : mne.io.BaseRaw
+        Recording; modified in place.
 
-    to_drop = [
-        ch for ch in raw.ch_names
-        if any(bad in ch.lower() for bad in invalid_labels)
-    ]
+    Returns
+    -------
+    mne.io.BaseRaw
+        The same object, with matching channels dropped.
+    """
+    invalid_labels = ["status", "counter", "counter 2power24", "source"]
+
+    to_drop = [ch for ch in raw.ch_names if any(bad in ch.lower() for bad in invalid_labels)]
 
     if len(to_drop) > 0:
         print(f"Dropping invalid channels: {to_drop}")
@@ -32,32 +34,29 @@ def drop_invalid_channels(raw):
     return raw
 
 
-def drop_invalid_eeg_channels(epochs):
-    """Drop EEG channels with NaN or flat (zero) location vectors."""
+def drop_invalid_eeg_channels(epochs: mne.Epochs) -> mne.Epochs:
+    """Drop EEG channels with NaN or all-zero location vectors.
 
+    Parameters
+    ----------
+    epochs : mne.Epochs
+        Epochs to check.
+
+    Returns
+    -------
+    mne.Epochs
+        Epochs without the invalid channels (unchanged if none).
+    """
     bad_channels = []
 
     for ch in epochs.info["chs"]:
         if ch["kind"] == 2:  # EEG
             loc = ch["loc"][:3]
 
-            if (
-                np.any(np.isnan(loc)) or
-                np.all(loc == 0.0)
-            ):
+            if np.any(np.isnan(loc)) or np.all(loc == 0.0):
                 bad_channels.append(ch["ch_name"])
 
     if bad_channels:
         print(f"  Dropping {len(bad_channels)} invalid EEG channels: {bad_channels}")
         return epochs.drop_channels(bad_channels)
     return epochs
-
-
-def save_epochs(epochs_ar: mne.Epochs, output_dir: Path, subject: str):
-    """Save MNE Epochs object to FIF file and print confirmation."""
-
-    output_dir.mkdir(exist_ok=True)
-    output_file = output_dir / f"sub-{subject}_preica_clean_epo.fif"
-    epochs_ar.save(output_file, overwrite=True)
-    print("Saved pre-ICA epochs ->", output_file)
-    return output_file

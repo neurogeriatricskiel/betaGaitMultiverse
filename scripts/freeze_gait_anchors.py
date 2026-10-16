@@ -1,118 +1,123 @@
 """
-freeze_gait_anchors.py
-=======================
-Deliberately (re)compute the group-median gait-event anchors for the
-active dataset, pooled across every subject with a kept-cycles file in
-d04_gaitepochs, and write them to the FROZEN calibration file
-(d05_ersp/group_gait_event_anchors_frozen.json).
+freeze_gait_anchors.py -- compute and freeze the group gait-event anchors (run by hand).
 
-This is the ONLY place these anchors are computed. Both the reference
-pipeline (prepana05_gaitcycles2tfr.py) and the multiverse pipeline
-(multiverse_pipeline.py) read this frozen file via src.ersp.
-load_group_anchors() -- neither one computes or overwrites it anymore.
-Before 2026-08-07, prepana05 silently recomputed and overwrote this file
-on every run, pooled over whatever subjects/settings happened to be
-active that run; a same-day drift between a cached multiverse result and
-a fresh reference-pipeline re-run (different anchors, not different
-code) is what surfaced this as a real bug -- see the ASR=20 pre-flight
-task's multiverse cross-check.
-
-Run this BY HAND, deliberately, only when the anchors genuinely need
-recomputing (e.g. a materially different subject cohort or
-preprocessing chain) -- never as an automatic side effect of a pipeline
-run. Prints the new values against the existing frozen file (if any)
-before overwriting, so a re-run always shows exactly what changed.
-
-Usage
------
-    BETAGAIT_DATASET=stepup   python scripts/freeze_gait_anchors.py
-    BETAGAIT_DATASET=jacobsen python scripts/freeze_gait_anchors.py
+Purpose
+    Group-median LTO/LHS/RTO positions (% of the RHS-RHS cycle), pooled
+    over every kept cycle of every subject with a cycles_kept.tsv, written
+    to the frozen calibration file read by src.ersp.load_group_anchors
+    (treadmill reference warp and both multiverses). No pipeline stage
+    recomputes or overwrites this file. Shows the change against the
+    existing file and asks before overwriting.
+    Frozen values: treadmill 10.0 / 50.0 / 59.8 %, overground
+    16.0 / 50.3 / 66.0 % (overground reference uses fixed 18/50/68 %).
+Inputs
+    datasets/<ds>/d04_gaitepochs/sub-*_cycles_kept.tsv
+Outputs
+    datasets/<ds>/d05_ersp/group_gait_event_anchors_frozen.json
+Manuscript
+    Methods 2.5 (time warping).
+Run
+    BETAGAIT_DATASET=<stepup|jacobsen> python scripts/freeze_gait_anchors.py
 """
+
 import json
 from datetime import date
+from pathlib import Path
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
-from src.paths import get_dataset_dirs
 from src.config import DATASET, SUBJECTS
+from src.paths import get_dataset_dirs
 
-dirs = get_dataset_dirs(DATASET)
-GAITEPOCH_DIR = dirs["gaitepochs"]
-ERSP_DIR      = dirs["ersp"]
-FROZEN_PATH   = ERSP_DIR / "group_gait_event_anchors_frozen.json"
-
-_f_lto, _f_lhs, _f_rto = [], [], []
-subjects_pooled = []
-for subject in SUBJECTS:
-    meta_path = GAITEPOCH_DIR / f"sub-{subject}_cycles_kept.tsv"
-    if not meta_path.exists():
-        print(f"  sub-{subject}: no cycles_kept.tsv -- skipping")
-        continue
-    meta = pd.read_csv(meta_path, sep="\t")
-    if len(meta) == 0:
-        print(f"  sub-{subject}: cycles_kept.tsv is empty -- skipping")
-        continue
-    dur = meta["rhs_end_s"] - meta["rhs_start_s"]
-    _f_lto.append(((meta["lto_s"] - meta["rhs_start_s"]) / dur).values)
-    _f_lhs.append(((meta["lhs_s"] - meta["rhs_start_s"]) / dur).values)
-    _f_rto.append(((meta["rto_s"] - meta["rhs_start_s"]) / dur).values)
-    subjects_pooled.append(subject)
-
-if not _f_lto:
-    raise RuntimeError(
-        "No sub-*_cycles_kept.tsv files found -- cannot compute group "
-        "gait-event anchors. Run prepana01-04 first."
-    )
-
-A_lto = float(np.median(np.concatenate(_f_lto))) * 100
-A_lhs = float(np.median(np.concatenate(_f_lhs))) * 100
-A_rto = float(np.median(np.concatenate(_f_rto))) * 100
-n_subjects_pooled = len(subjects_pooled)
-n_cycles_pooled = sum(len(a) for a in _f_lto)
-
-assert 0 < A_lto < A_lhs < A_rto < 100, (
-    f"Group anchors are not monotonic: A_lto={A_lto}, A_lhs={A_lhs}, A_rto={A_rto}"
+FROZEN_NOTE = (
+    "FROZEN calibration input. Computed once from the reference pipeline's kept gait "
+    "cycles, pooled across every subject listed in subjects_pooled. No pipeline code "
+    "path overwrites it (src.ersp.load_group_anchors raises if it is missing). To "
+    "recompute, run scripts/freeze_gait_anchors.py by hand."
 )
 
-print(f"New anchors (pooled across {n_subjects_pooled} subjects, {n_cycles_pooled} cycles):")
-print(f"  A_lto={A_lto:.4f}%  A_lhs={A_lhs:.4f}%  A_rto={A_rto:.4f}%")
-print(f"  subjects: {subjects_pooled}")
 
-if FROZEN_PATH.exists():
-    with open(FROZEN_PATH) as f:
-        old = json.load(f)
-    print(f"\nExisting frozen file ({FROZEN_PATH.name}):")
-    print(f"  A_lto={old['A_lto_pct']:.4f}%  A_lhs={old['A_lhs_pct']:.4f}%  A_rto={old['A_rto_pct']:.4f}%  "
-          f"n={old['n_subjects_pooled']}  frozen_date={old.get('frozen_date', '?')}")
-    print(f"  Diff: dA_lto={A_lto - old['A_lto_pct']:+.4f}  dA_lhs={A_lhs - old['A_lhs_pct']:+.4f}  "
-          f"dA_rto={A_rto - old['A_rto_pct']:+.4f}")
-    resp = input(f"\nOverwrite {FROZEN_PATH} with the new values above? [y/N] ")
-    if resp.strip().lower() != "y":
+def pooled_event_fractions(subjects: list[str], gaitepoch_dir: Path):
+    """Per-cycle LTO/LHS/RTO fractions of cycle duration, pooled over subjects."""
+    f_lto, f_lhs, f_rto, pooled = [], [], [], []
+    for subject in subjects:
+        meta_path = gaitepoch_dir / f"sub-{subject}_cycles_kept.tsv"
+        if not meta_path.exists():
+            print(f"  sub-{subject}: no cycles_kept.tsv -- skipping")
+            continue
+        meta = pd.read_csv(meta_path, sep="\t")
+        if len(meta) == 0:
+            print(f"  sub-{subject}: cycles_kept.tsv is empty -- skipping")
+            continue
+        dur = meta["rhs_end_s"] - meta["rhs_start_s"]
+        f_lto.append(((meta["lto_s"] - meta["rhs_start_s"]) / dur).values)
+        f_lhs.append(((meta["lhs_s"] - meta["rhs_start_s"]) / dur).values)
+        f_rto.append(((meta["rto_s"] - meta["rhs_start_s"]) / dur).values)
+        pooled.append(subject)
+    if not f_lto:
+        raise RuntimeError("No sub-*_cycles_kept.tsv files found -- run prepana01-04 first.")
+    return f_lto, f_lhs, f_rto, pooled
+
+
+def group_anchors(subjects: list[str], gaitepoch_dir: Path) -> dict:
+    """Group-median anchors (% of the cycle) and what they were pooled from."""
+    f_lto, f_lhs, f_rto, pooled = pooled_event_fractions(subjects, gaitepoch_dir)
+    a_lto, a_lhs, a_rto = (float(np.median(np.concatenate(f))) * 100 for f in (f_lto, f_lhs, f_rto))
+    if not 0 < a_lto < a_lhs < a_rto < 100:
+        raise RuntimeError(f"Group anchors are not monotonic: {a_lto}, {a_lhs}, {a_rto}")
+    return {
+        "A_lto_pct": a_lto,
+        "A_lhs_pct": a_lhs,
+        "A_rto_pct": a_rto,
+        "n_subjects_pooled": len(pooled),
+        "n_cycles_pooled": sum(len(a) for a in f_lto),
+        "subjects_pooled": pooled,
+    }
+
+
+def confirm_overwrite(frozen_path: Path, new: dict) -> bool:
+    """Show the existing frozen values and the change; ask before overwriting."""
+    if not frozen_path.exists():
+        print(f"\nNo existing frozen file at {frozen_path} -- creating it.")
+        return True
+    old = json.loads(frozen_path.read_text())
+    print(f"\nExisting frozen file ({frozen_path.name}):")
+    print(
+        f"  A_lto={old['A_lto_pct']:.4f}%  A_lhs={old['A_lhs_pct']:.4f}%  "
+        f"A_rto={old['A_rto_pct']:.4f}%  n={old['n_subjects_pooled']}  "
+        f"frozen_date={old.get('frozen_date', '?')}"
+    )
+    print(
+        "  Diff: "
+        + "  ".join(
+            f"d{k[:5]}={new[k] - old[k]:+.4f}" for k in ("A_lto_pct", "A_lhs_pct", "A_rto_pct")
+        )
+    )
+    answer = input(f"\nOverwrite {frozen_path} with the new values above? [y/N] ")
+    return answer.strip().lower() == "y"
+
+
+def main() -> None:
+    """Compute the anchors, show them and freeze them after confirmation."""
+    dirs = get_dataset_dirs(DATASET)
+    frozen_path = dirs["ersp"] / "group_gait_event_anchors_frozen.json"
+    new = group_anchors(SUBJECTS, dirs["gaitepochs"])
+    print(
+        f"New anchors (pooled across {new['n_subjects_pooled']} subjects, "
+        f"{new['n_cycles_pooled']} cycles):"
+    )
+    print(
+        "  " + "  ".join(f"{k[:5]}={new[k]:.4f}%" for k in ("A_lto_pct", "A_lhs_pct", "A_rto_pct"))
+    )
+    print(f"  subjects: {new['subjects_pooled']}")
+    if not confirm_overwrite(frozen_path, new):
         print("Not overwritten. Exiting.")
-        raise SystemExit(0)
-else:
-    print(f"\nNo existing frozen file at {FROZEN_PATH} -- creating it.")
+        return
+    frozen = {**new, "frozen_date": date.today().isoformat(), "note": FROZEN_NOTE}
+    frozen_path.write_text(json.dumps(frozen, indent=2))
+    print(f"\nSaved -> {frozen_path}")
 
-frozen = {
-    "A_lto_pct": A_lto,
-    "A_lhs_pct": A_lhs,
-    "A_rto_pct": A_rto,
-    "n_subjects_pooled": n_subjects_pooled,
-    "n_cycles_pooled": n_cycles_pooled,
-    "subjects_pooled": subjects_pooled,
-    "frozen_date": date.today().isoformat(),
-    "note": (
-        "FROZEN calibration input. Computed once from the reference "
-        "pipeline's kept gait cycles, pooled across every subject listed "
-        "in subjects_pooled. This file is READ-ONLY in practice: no "
-        "pipeline code path overwrites it (src.ersp.load_group_anchors "
-        "raises if it's missing rather than recomputing it). If these "
-        "anchors ever need recomputing, rerun this script (scripts/"
-        "freeze_gait_anchors.py) by hand -- it will show the diff "
-        "against the current frozen values before overwriting."
-    ),
-}
-with open(FROZEN_PATH, "w") as f:
-    json.dump(frozen, f, indent=2)
-print(f"\nSaved -> {FROZEN_PATH}")
+
+if __name__ == "__main__":
+    main()

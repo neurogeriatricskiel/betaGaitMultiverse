@@ -1,0 +1,5 @@
+=== stepup (n = 17): heel-strike-locked group mean, 1-40 Hz, baseline -200..0 ms
+  pre-ICA        Fpz  peak-to-peak 0..400 ms  30.37 uV  max |x|  20.68 uV at 124 ms
+  pre-ICA        Cz   peak-to-peak 0..400 ms   7.63 uV  max |x|   6.58 uV at 84 ms
+  ICA-corrected  Fpz  peak-to-peak 0..400 ms  26.43 uV  max |x|  16.52 uV at 128 ms
+  ICA-corrected  Cz   peak-to-peak 0..400 ms   5.18 uV  max |x|   4.11 uV at 96 ms

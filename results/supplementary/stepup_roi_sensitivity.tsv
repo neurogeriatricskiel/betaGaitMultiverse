@@ -1,0 +1,5 @@
+roi	n_channels	t	df	p	mean_db
+stored	63	5.1287	16	0.000101	1.9488
+without_frontal	56	5.0222	16	0.0001252	1.8184
+without_frontal_lateral	48	5.0501	16	0.0001183	1.8137
+narrow	5	4.4176	16	0.0004312	1.1454

@@ -1,0 +1,35 @@
+Overground beta ERSP: ours = mean of per-cycle dB (stored ERSP); source = dB of mean amplitude (Jacobsen et al.)
+
+Group-mean ROI beta ERSP map (13-30 Hz rows x 101 cycle points), dB re standing:
+  PRIMARY n=14 ours  : range -2.965 to -0.875 dB  mean -2.096 dB  negative 100.0 % of 1818 pixels  max positive none (all pixels <= 0)
+  PRIMARY n=14 source: range +0.043 to +1.844 dB  mean +0.763 dB  negative 0.0 % of 1818 pixels  max positive +1.844 dB
+  FULL    n=18 ours  : range -3.095 to -1.082 dB  mean -2.243 dB  negative 100.0 % of 1818 pixels  max positive none (all pixels <= 0)
+  FULL    n=18 source: range -0.110 to +1.635 dB  mean +0.624 dB  negative 2.5 % of 1818 pixels  max positive +1.635 dB
+
+Per-subject ROI-mean beta ERSP (beta rows x whole cycle), dB re standing:
+  sub-001: ours -2.205  source +0.670  SIGN CHANGE
+  sub-002: ours -1.148  source +1.806  SIGN CHANGE
+  sub-003: ours -3.096  source -0.289
+  sub-004: ours -2.397  source +0.289  SIGN CHANGE
+  sub-005: ours -2.054  source +0.792  SIGN CHANGE
+  sub-006: ours -3.639  source -0.737
+  sub-007: ours -2.054  source +0.792  SIGN CHANGE
+  sub-008: ours -3.633  source -0.731
+  sub-009: ours -1.709  source +1.237  SIGN CHANGE
+  sub-010: ours -2.553  source +0.262  SIGN CHANGE
+  sub-011: ours -2.006  source +0.795  SIGN CHANGE
+  sub-012: ours -1.751  source +1.257  SIGN CHANGE
+  sub-013: ours -1.709  source +1.237  SIGN CHANGE
+  sub-014: ours -2.306  source +0.861  SIGN CHANGE
+  sub-015: ours -2.067  source +0.710  SIGN CHANGE
+  sub-016: ours -2.478  source +0.226  SIGN CHANGE
+  sub-017: ours -1.282  source +1.582  SIGN CHANGE
+  sub-018: ours -2.286  source +0.477  SIGN CHANGE
+  PRIMARY: 13 of 14 subjects change sign (001, 002, 004, 005, 009, 010, 011, 012, 014, 015, 016, 017, 018)
+  FULL: 15 of 18 subjects change sign (001, 002, 004, 005, 007, 009, 010, 011, 012, 013, 014, 015, 016, 017, 018)
+
+Beta 13-30 Hz double stance vs swing (ROI), paired t-test:
+  PRIMARY ours  : t(13) = 3.501  p = 0.003904  mean difference = +0.582 dB  df = 13  DS > swing 12/14
+  PRIMARY source: t(13) = 3.439  p = 0.004404  mean difference = +0.544 dB  df = 13  DS > swing 12/14
+  FULL    ours  : t(17) = 3.974  p = 0.000982  mean difference = +0.528 dB  df = 17  DS > swing 16/18
+  FULL    source: t(17) = 3.906  p = 0.001136  mean difference = +0.494 dB  df = 17  DS > swing 16/18

@@ -10,15 +10,17 @@ sensorimotor ROI that weights near-center channels more strongly.
 The weight topography can be plotted as a Methods figure to show
 which channels contribute to the analysis.
 
-References:
-  Petersen et al. 2012 J Physiol 590:2443 — beta ERS at heel contact
-  Bulea et al. 2015 Front Hum Neurosci 9:247 — beta ERD during swing
-  Seeber et al. 2015 Front Hum Neurosci 9:1 — gait phase beta dynamics
+References
+----------
+Petersen et al. 2012 J Physiol 590:2443 — beta ERS at heel contact
+Bulea et al. 2015 Front Hum Neurosci 9:247 — beta ERD during swing
+Seeber et al. 2015 Front Hum Neurosci 9:1 — gait phase beta dynamics
 """
 
-import numpy as np
-import mne
 from pathlib import Path
+
+import mne
+import numpy as np
 
 from src.config import ROI_CENTER_CH
 
@@ -59,42 +61,41 @@ def linear_roi_weights(
 
     Parameters
     ----------
-    info      : mne.Info containing electrode positions
-    center_ch : name of the reference channel (default "Cz")
+    info : mne.Info
+        Info containing electrode positions.
+    center_ch : str
+        Name of the reference channel (default ``ROI_CENTER_CH``).
 
     Returns
     -------
-    weights : np.ndarray shape (n_ch,)
+    weights : np.ndarray, shape (n_ch,)
         Normalised linear weights. Sums to 1.0.
 
     Raises
     ------
-    ValueError if center_ch is not in info.ch_names or has no position.
+    ValueError
+        If center_ch is not in info.ch_names or has no position, or if the
+        distances or weights are all zero.
     """
     if center_ch not in info.ch_names:
         raise ValueError(f"Center channel '{center_ch}' not in info")
 
     # Extract 3D positions in metres, convert to mm
-    positions = np.array([
-        info["chs"][i]["loc"][:3] * 1000.0
-        for i in range(len(info.ch_names))
-    ])  # (n_ch, 3) in mm
+    positions = np.array(
+        [info["chs"][i]["loc"][:3] * 1000.0 for i in range(len(info.ch_names))]
+    )  # (n_ch, 3) in mm
 
     center_idx = info.ch_names.index(center_ch)
     center_pos = positions[center_idx]
 
     if not np.any(center_pos != 0):
-        raise ValueError(
-            f"Center channel '{center_ch}' has no electrode position"
-        )
+        raise ValueError(f"Center channel '{center_ch}' has no electrode position")
 
     # Euclidean distance from center in mm
     dists = np.linalg.norm(positions - center_pos, axis=1)  # (n_ch,)
 
     # Identify channels with valid positions
-    has_pos = np.array([
-        np.any(positions[i] != 0) for i in range(len(info.ch_names))
-    ])
+    has_pos = np.array([np.any(positions[i] != 0) for i in range(len(info.ch_names))])
 
     valid_dists = dists[has_pos]
     d_max = valid_dists.max()
@@ -126,17 +127,23 @@ def apply_linear_roi(
 
     Parameters
     ----------
-    ersp    : np.ndarray
+    ersp : np.ndarray
         ERSP array. Channel axis must be axis 0.
         Accepted shapes:
           (n_ch, n_freqs, n_times)  → returns (n_freqs, n_times)
           (n_ch, n_freqs)           → returns (n_freqs,)
-    weights : np.ndarray shape (n_ch,)
+    weights : np.ndarray, shape (n_ch,)
         Normalised weights from linear_roi_weights().
 
     Returns
     -------
-    np.ndarray with channel dimension collapsed.
+    np.ndarray
+        ERSP with the channel dimension collapsed.
+
+    Raises
+    ------
+    ValueError
+        If the channel counts of ``ersp`` and ``weights`` differ.
     """
     if ersp.shape[0] != weights.shape[0]:
         raise ValueError(
@@ -160,11 +167,16 @@ def plot_weight_topography(
 
     Parameters
     ----------
-    weights   : weight vector from linear_roi_weights()
-    info      : mne.Info with electrode positions
-    subject   : subject id for title
-    out_path  : output PNG path
-    center_ch : reference channel name
+    weights : np.ndarray
+        Weight vector from linear_roi_weights().
+    info : mne.Info
+        Info with electrode positions.
+    subject : str
+        Subject ID for the title.
+    out_path : Path
+        Output PNG path.
+    center_ch : str
+        Reference channel name (title only).
     """
     import matplotlib.pyplot as plt
 
@@ -180,8 +192,7 @@ def plot_weight_topography(
         sphere=TOPOMAP_SPHERE,
     )
     ax.set_title(
-        f"sub-{subject}  Linear ROI weights\n"
-        f"center={center_ch}",
+        f"sub-{subject}  Linear ROI weights\ncenter={center_ch}",
         fontsize=9,
     )
     fig.tight_layout()

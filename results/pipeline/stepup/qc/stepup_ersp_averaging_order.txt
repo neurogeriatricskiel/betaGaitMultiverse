@@ -1,0 +1,29 @@
+Treadmill beta ERSP: ours = mean of per-cycle dB (stored ERSP); source = dB of mean amplitude (Jacobsen et al.'s order)
+
+Group-mean ROI beta ERSP map (13-30 Hz rows x 101 cycle points), dB re standing:
+  REFERENCE n=17 ours  : range -2.760 to +3.134 dB  mean -0.442 dB  negative 61.0 % of 1818 pixels  max positive +3.134 dB
+  REFERENCE n=17 source: range +0.157 to +5.478 dB  mean +2.240 dB  negative 0.0 % of 1818 pixels  max positive +5.478 dB
+
+Per-subject ROI-mean beta ERSP (beta rows x whole cycle), dB re standing:
+  sub-S1: ours +0.816  source +3.537
+  sub-S2: ours -1.189  source +1.623  SIGN CHANGE
+  sub-S3: ours -2.588  source +0.082  SIGN CHANGE
+  sub-S4: ours -2.011  source +0.711  SIGN CHANGE
+  sub-S7: ours -0.930  source +1.680  SIGN CHANGE
+  sub-S9: ours +1.348  source +4.068
+  sub-S10: ours +2.264  source +4.767
+  sub-S11: ours -0.821  source +2.010  SIGN CHANGE
+  sub-S12: ours +0.165  source +2.924
+  sub-S13: ours +0.927  source +3.434
+  sub-S14: ours +1.302  source +3.776
+  sub-S15: ours -0.035  source +2.484  SIGN CHANGE
+  sub-S16: ours -1.735  source +0.846  SIGN CHANGE
+  sub-S17: ours +0.026  source +2.635
+  sub-S18: ours -0.967  source +1.720  SIGN CHANGE
+  sub-S20: ours -1.694  source +1.141  SIGN CHANGE
+  sub-S23: ours -2.393  source +0.650  SIGN CHANGE
+  REFERENCE: 10 of 17 subjects change sign (S2, S3, S4, S7, S11, S15, S16, S18, S20, S23)
+
+Beta 13-30 Hz double stance vs swing (ROI), paired t-test:
+  REFERENCE ours  : t(16) = 5.129  p = 0.000101  mean difference = +1.949 dB  df = 16  DS > swing 16/17
+  REFERENCE source: t(16) = 5.209  p = 8.613e-05  mean difference = +1.809 dB  df = 16  DS > swing 16/17

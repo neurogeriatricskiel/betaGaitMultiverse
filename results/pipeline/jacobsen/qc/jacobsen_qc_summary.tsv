@@ -1,0 +1,73 @@
+subject	stage	flag	n_cycles_used	n_nan	ersp_range_db	roi_mean_db	double_stance_roi_db	swing_roi_db	baseline_mean_v2	baseline_ok	n_extracted	n_total	reject_frac	mean_seg_len	n_total_comps	n_brain_comps	n_excl_comps	brain_frac	concat_dur_s	n_ica_comps	n_brain_ics	n_excl_ics	use_asr	asr_cutoff	highpass_hz	lowpass_hz	ica_fit_highpass_hz	iclabel_rule
+001	preprocessing	pass																	3000.1	40.0	22.0	18.0	True	20.0	0.2	60.0	2.0	jacobsen_paper_eye_muscle
+002	preprocessing	pass																	3586.2	44.0	28.0	16.0	True	20.0	0.2	60.0	2.0	jacobsen_paper_eye_muscle
+003	preprocessing	pass																	3312.6	36.0	26.0	10.0	True	20.0	0.2	60.0	2.0	jacobsen_paper_eye_muscle
+004	preprocessing	pass																	3172.9	39.0	30.0	9.0	True	20.0	0.2	60.0	2.0	jacobsen_paper_eye_muscle
+005	preprocessing	pass																	3326.7	45.0	25.0	20.0	True	20.0	0.2	60.0	2.0	jacobsen_paper_eye_muscle
+006	preprocessing	pass																	3372.8	34.0	28.0	6.0	True	20.0	0.2	60.0	2.0	jacobsen_paper_eye_muscle
+007	preprocessing	pass																	3326.7	45.0	25.0	20.0	True	20.0	0.2	60.0	2.0	jacobsen_paper_eye_muscle
+008	preprocessing	pass																	3372.8	34.0	28.0	6.0	True	20.0	0.2	60.0	2.0	jacobsen_paper_eye_muscle
+009	preprocessing	pass																	3438.9	36.0	29.0	7.0	True	20.0	0.2	60.0	2.0	jacobsen_paper_eye_muscle
+010	preprocessing	pass																	3457.4	40.0	32.0	8.0	True	20.0	0.2	60.0	2.0	jacobsen_paper_eye_muscle
+011	preprocessing	pass																	3459.5	49.0	39.0	10.0	True	20.0	0.2	60.0	2.0	jacobsen_paper_eye_muscle
+012	preprocessing	pass																	2926.7	45.0	26.0	19.0	True	20.0	0.2	60.0	2.0	jacobsen_paper_eye_muscle
+013	preprocessing	pass																	3438.9	36.0	29.0	7.0	True	20.0	0.2	60.0	2.0	jacobsen_paper_eye_muscle
+014	preprocessing	pass																	3429.5	42.0	37.0	5.0	True	20.0	0.2	60.0	2.0	jacobsen_paper_eye_muscle
+015	preprocessing	pass																	3366.1	28.0	18.0	10.0	True	20.0	0.2	60.0	2.0	jacobsen_paper_eye_muscle
+016	preprocessing	pass																	3492.3	48.0	44.0	4.0	True	20.0	0.2	60.0	2.0	jacobsen_paper_eye_muscle
+017	preprocessing	pass																	2730.1	43.0	32.0	11.0	True	20.0	0.2	60.0	2.0	jacobsen_paper_eye_muscle
+018	preprocessing	pass																	3260.8	46.0	32.0	14.0	True	20.0	0.2	60.0	2.0	jacobsen_paper_eye_muscle
+001	ica	pass													40.0	22.0	18.0	0.55										
+002	ica	pass													44.0	28.0	16.0	0.636										
+003	ica	pass													36.0	26.0	10.0	0.722										
+004	ica	pass													39.0	30.0	9.0	0.769										
+005	ica	pass													45.0	25.0	20.0	0.556										
+006	ica	pass													34.0	28.0	6.0	0.824										
+007	ica	pass													45.0	25.0	20.0	0.556										
+008	ica	pass													34.0	28.0	6.0	0.824										
+009	ica	pass													36.0	29.0	7.0	0.806										
+010	ica	pass													40.0	32.0	8.0	0.8										
+011	ica	pass													49.0	39.0	10.0	0.796										
+012	ica	pass													45.0	26.0	19.0	0.578										
+013	ica	pass													36.0	29.0	7.0	0.806										
+014	ica	pass													42.0	37.0	5.0	0.881										
+015	ica	pass													28.0	18.0	10.0	0.643										
+016	ica	pass													48.0	44.0	4.0	0.917										
+017	ica	pass													43.0	32.0	11.0	0.744										
+018	ica	pass													46.0	32.0	14.0	0.696										
+001	gait_epochs	pass									202.0	202.0	0.0	249.4														
+002	gait_epochs	pass									238.0	238.0	0.0	272.6														
+003	gait_epochs	pass									219.0	220.0	0.005	253.3														
+004	gait_epochs	pass									219.0	219.0	0.0	267.8														
+005	gait_epochs	pass									232.0	232.0	0.0	255.1														
+006	gait_epochs	pass									103.0	103.0	0.0	283.1														
+007	gait_epochs	pass									232.0	232.0	0.0	255.1														
+008	gait_epochs	pass									113.0	113.0	0.0	284.4														
+009	gait_epochs	pass									220.0	220.0	0.0	272.4														
+010	gait_epochs	pass									238.0	238.0	0.0	301.9														
+011	gait_epochs	pass									237.0	237.0	0.0	264.0														
+012	gait_epochs	pass									228.0	228.0	0.0	272.3														
+013	gait_epochs	pass									220.0	220.0	0.0	272.4														
+014	gait_epochs	pass									226.0	226.0	0.0	269.1														
+015	gait_epochs	pass									281.0	281.0	0.0	275.2														
+016	gait_epochs	pass									234.0	234.0	0.0	346.5														
+017	gait_epochs	pass									207.0	207.0	0.0	254.5														
+018	gait_epochs	pass									216.0	216.0	0.0	298.4														
+001	ersp	pass	202.0	0.0	25.17	0.25	0.99	-0.16	7.59255317e-11	True																		
+002	ersp	pass	238.0	0.0	19.84	-0.08	0.42	-0.36	1.1412016848e-10	True																		
+003	ersp	pass	219.0	0.0	16.84	-3.0	-2.83	-3.09	2.1058112579e-10	True																		
+004	ersp	pass	219.0	0.0	37.42	-2.71	-2.28	-2.94	2.8227302597e-10	True																		
+005	ersp	pass	232.0	0.0	19.66	-1.73	-1.37	-1.93	6.973259137e-11	True																		
+006	ersp	pass	103.0	0.0	22.46	-2.78	-2.69	-2.82	3.6241473322e-10	True																		
+007	ersp	pass	232.0	0.0	19.66	-1.73	-1.37	-1.93	6.973259137e-11	True																		
+008	ersp	pass	113.0	0.0	22.07	-2.74	-2.64	-2.79	3.6241473322e-10	True																		
+009	ersp	pass	220.0	0.0	28.93	-1.95	-1.55	-2.17	7.889803836e-11	True																		
+010	ersp	pass	238.0	0.0	25.44	-1.89	-1.28	-2.22	1.6918096435e-10	True																		
+011	ersp	pass	237.0	0.0	16.63	-1.67	-1.9	-1.55	5.887700173e-11	True																		
+012	ersp	pass	228.0	0.0	30.54	-1.26	0.18	-2.06	5.185838616e-11	True																		
+013	ersp	pass	220.0	0.0	28.93	-1.95	-1.55	-2.17	7.889803836e-11	True																		
+014	ersp	pass	226.0	0.0	26.06	-0.92	0.05	-1.45	5.483699099e-11	True																		
+015	ersp	pass	281.0	0.0	14.85	-1.08	-0.75	-1.26	9.792697965e-11	True																		
+016	ersp	pass	234.0	0.0	23.87	-2.39	-2.01	-2.6	7.98247117e-11	True																		
+017	ersp	pass	207.0	0.0	19.57	0.34	0.23	0.41	1.9745297896e-10	True																		
+018	ersp	pass	216.0	0.0	19.71	-1.71	-1.35	-1.91	4.561921622e-11	True																		

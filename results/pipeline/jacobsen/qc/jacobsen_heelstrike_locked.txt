@@ -1,0 +1,5 @@
+=== jacobsen (n = 14): heel-strike-locked group mean, 1-40 Hz, baseline -200..0 ms
+  pre-ICA        Fpz  peak-to-peak 0..400 ms   5.84 uV  max |x|   5.15 uV at 212 ms
+  pre-ICA        Cz   peak-to-peak 0..400 ms  11.87 uV  max |x|   8.91 uV at 76 ms
+  ICA-corrected  Fpz  peak-to-peak 0..400 ms   5.57 uV  max |x|   4.72 uV at 104 ms
+  ICA-corrected  Cz   peak-to-peak 0..400 ms  11.79 uV  max |x|   8.96 uV at 76 ms

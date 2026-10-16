@@ -1,233 +1,123 @@
 """
-ana04_clean2gaitcycles.py
-=========================
-Extract gait-cycle EEG segments from ICA-cleaned data at original sfreq.
+prepana04_clean2gaitcycles.py -- reference pipeline, stage 4: gait-cycle segments.
 
-# Gait segments saved at original sfreq for TFR computation.
-# Time-normalisation is applied AFTER TFR on the power time series,
-# not on the raw voltage signal. This preserves instantaneous frequency
-# content during wavelet convolution.
-# See: Seeber et al. 2015 J Neurosci; Daly et al. 2011 J Neural Eng
-
-Input
------
-d01_gaitevents/  sub-{sub}_cycles.tsv        (rhs_start_s, rhs_end_s in s)
-d03_clean/       sub-{sub}_desc-icaClean_concat_raw.fif
-
-Output
-------
-d04_gaitepochs/  sub-{sub}_gait_segments.npy   object array (n_cycles,), each (n_ch, n_samp_i)
-                 sub-{sub}_gait_sfreq.npy       scalar float, recording sfreq
-                 sub-{sub}_cycles_kept.tsv      TSV of kept cycle metadata
+Purpose
+    Cut the ICA-corrected walking (CS) EEG into RHS-to-RHS gait-cycle
+    segments at the recording's own sampling rate and reject cycles with
+    non-finite samples or peak amplitude above AMP_THRESH
+    (src.gait_segments). Time normalisation happens after the TFR, on the
+    power time series (Seeber et al. 2015).
+Inputs
+    datasets/<ds>/d01_gaitevents/sub-*_cycles.tsv
+    datasets/<ds>/d03_clean/sub-*_desc-icaClean_concat_raw.fif
+Outputs
+    datasets/<ds>/d04_gaitepochs/sub-*_gait_segments.npy (object array of (n_ch, n_samp))
+    datasets/<ds>/d04_gaitepochs/sub-*_gait_sfreq.npy, sub-*_cycles_kept.tsv
+    datasets/<ds>/d00_qc/sub-*_gait_epochs_qc.json
+Manuscript
+    Methods 2.5 (gait-cycle epochs, amplitude rejection).
+Run
+    BETAGAIT_DATASET=<stepup|jacobsen> python scripts/prepana04_clean2gaitcycles.py [subject]
 """
 
-import sys
-
+import mne
 import numpy as np
 import pandas as pd
-import mne
 
+from src.config import DATASET
+from src.cycle_tfr import annotation_segment
+from src.gait_segments import extract_cycle_segments, save_cycle_segments
 from src.paths import get_dataset_dirs
-from src.config import DATASET, SUBJECTS, AMP_THRESH
-from src.qc import log_qc
+from src.qc import gait_epochs_flag, log_qc
 from src.resume import stage_already_done
-
-# Optional: restrict this invocation to a single subject (see
-# prepana02_raw2ica.py's identical mechanism).
-if len(sys.argv) > 1:
-    SUBJECTS = [sys.argv[1]]
-
-dirs = get_dataset_dirs(DATASET)
-
-GAIT_EVENTS_DIR = dirs["gait_events"]
-CLEAN_DIR       = dirs["clean"]
-GAITEPOCH_DIR   = dirs["gaitepochs"]
-QC_DIR          = dirs["qc"]
+from src.stage_runner import run_for_subjects, subjects_from_command_line
 
 
-for subject in SUBJECTS:
-    try:
-        print(f"GAIT SEGMENTATION: sub-{subject}")
-
-        raw_path    = CLEAN_DIR / f"sub-{subject}_desc-icaClean_concat_raw.fif"
-        cycles_path = GAIT_EVENTS_DIR / f"sub-{subject}_cycles.tsv"
-
-        out_seg  = GAITEPOCH_DIR / f"sub-{subject}_gait_segments.npy"
-        out_sfreq = GAITEPOCH_DIR / f"sub-{subject}_gait_sfreq.npy"
-        out_meta = GAITEPOCH_DIR / f"sub-{subject}_cycles_kept.tsv"
-
-        if stage_already_done(
-            [out_seg, out_sfreq, out_meta],
-            inputs=[raw_path, cycles_path],
-            validate=lambda: np.load(out_seg, allow_pickle=True),
-        ):
-            print(f"  Already complete -- skipping sub-{subject}")
-            continue
-
-        if not raw_path.exists():
-            print(f"  Clean EEG not found, skipping: {raw_path.name}")
-            continue
-
-        raw   = mne.io.read_raw_fif(raw_path, preload=True, verbose=False)
-
-        # Crop to the CS (walking) segment using the annotation added in ana02
-        walk_annot = [a for a in raw.annotations if a["description"] == "CS"]
-        if len(walk_annot) != 1:
-            raise RuntimeError(f"Expected 1 CS annotation, found {len(walk_annot)}")
-        walk_start = float(walk_annot[0]["onset"])
-        walk_stop  = float(walk_annot[0]["onset"]) + float(walk_annot[0]["duration"])
-        walk_stop  = min(walk_stop, raw.times[-1])   # clamp: annotation may overshoot by <1 sample after resample
-        raw = raw.crop(walk_start, walk_stop)
-
-        sfreq = raw.info["sfreq"]
-        eeg_dur = raw.times[-1]
-
-        print(f"  EEG sfreq    : {sfreq:.0f} Hz")
-        print(f"  EEG duration : {eeg_dur:.2f} s  ({raw.n_times} samples)")
-        print(f"  EEG channels : {len(raw.ch_names)}")
-
-        all_data  = raw.get_data()
-        nan_frac  = np.mean(np.isnan(all_data))
-        nan_by_ch = np.mean(np.isnan(all_data), axis=1)
-        bad_chs   = [raw.ch_names[i] for i, f in enumerate(nan_by_ch) if f > 0.01]
-
-        if bad_chs:
-            print(f"  Channels with >1% NaN ({len(bad_chs)}): {bad_chs}")
-            print(f"  These channels will be excluded from segments.")
-
-        cycles_df   = pd.read_csv(cycles_path, sep="\t")
-
-        if len(cycles_df) == 0:
-            print("  ERROR: cycles.tsv is empty -- skipping subject.")
-            continue
-
-        gait_t0 = cycles_df["rhs_start_s"].min()
-        gait_t1 = cycles_df["rhs_end_s"].max()
-
-        print(f"\n  Gait cycles loaded : {len(cycles_df)}")
-        print(f"  Gait time range    : {gait_t0:.2f} - {gait_t1:.2f} s")
-        print(f"  Mean cycle duration: {cycles_df['duration_s'].mean():.3f} s")
-
-        if gait_t0 < 0 or gait_t1 > eeg_dur + 1.0:
-            print(f"\n  WARNING: gait cycles [{gait_t0:.1f}, {gait_t1:.1f}] s "
-                  f"extend beyond EEG [{0:.1f}, {eeg_dur:.1f}] s -- "
-                  f"check synchronisation.")
-
-        gait_segments = []
-        kept_meta     = []
-        skipped_oob   = 0
-        skipped_bad   = 0
-        rejection_log = []
-
-        for _, row in cycles_df.iterrows():
-
-            t_start = float(row["rhs_start_s"])
-            t_end   = float(row["rhs_end_s"])
-
-            i_start = int(round(t_start * sfreq))
-            i_end   = int(round(t_end   * sfreq))
-
-            if i_start < 0 or i_end > raw.n_times or i_end <= i_start:
-                if len(rejection_log) < 5:
-                    rejection_log.append(
-                        f"OOB: cycle {_} t=[{t_start:.3f},{t_end:.3f}]s "
-                        f"-> samples [{i_start},{i_end}] (n_times={raw.n_times})"
-                    )
-                skipped_oob += 1
-                continue
-
-            data = raw.get_data(start=i_start, stop=i_end)   # (n_ch, n_samp_i)
-
-            if not np.isfinite(data).all():
-                if len(rejection_log) < 5:
-                    rejection_log.append(f"NaN/Inf: cycle {_} t=[{t_start:.3f},{t_end:.3f}]s")
-                skipped_bad += 1
-                continue
-
-            peak_amp = np.max(np.abs(data))
-
-            if peak_amp > AMP_THRESH:
-                skipped_bad += 1
-                if len(rejection_log) < 5:
-                    rejection_log.append(
-                        f"Amplitude: cycle {_} peak={peak_amp*1e6:.1f} uV"
-                    )
-                continue
-
-            gait_segments.append(data)
-            kept_meta.append(row)
-
-        n_extracted = len(gait_segments)
-        print(f"\n  Extracted  : {n_extracted} / {len(cycles_df)} cycles")
-        print(f"  Skipped OOB: {skipped_oob}")
-        print(f"  Skipped bad: {skipped_bad}")
-
-        if rejection_log:
-            print("  First rejected cycles:")
-            for reason in rejection_log:
-                print(f"    {reason}")
-
-        if n_extracted == 0:
-            print("  No segments extracted -- skipping subject.")
-            continue
-
-        meta_df = pd.DataFrame(kept_meta).reset_index(drop=True)
-
-        n_samp_min = min(s.shape[1] for s in gait_segments)
-        n_samp_max = max(s.shape[1] for s in gait_segments)
-        print(f"  Segment lengths: min={n_samp_min}  max={n_samp_max} samples")
-
-        segments_arr = np.empty(n_extracted, dtype=object)
-        for i, seg in enumerate(gait_segments):
-            segments_arr[i] = seg
-
-        np.save(out_seg,   segments_arr, allow_pickle=True)
-        np.save(out_sfreq, np.float64(sfreq))
-        meta_df.to_csv(out_meta, sep="\t", index=False)
-
-        print(f"\n  Saved -> {out_seg.name}")
-        print(f"  Saved -> {out_sfreq.name}")
-        print(f"  Saved -> {out_meta.name}")
-
-        # --- QC: gait epochs ---
-        n_extracted  = len(gait_segments)
-        n_total      = len(cycles_df)
-        reject_frac  = 1.0 - n_extracted / n_total if n_total > 0 else 1.0
-        seg_lengths  = [s.shape[-1] for s in gait_segments]
-        mean_seg_len = float(np.mean(seg_lengths)) if seg_lengths else 0.0
-
-        if n_extracted < 20:
-            epoch_flag = "fail"
-        elif n_extracted < 50 or reject_frac > 0.3:
-            epoch_flag = "warn"
-        else:
-            epoch_flag = "pass"
-
-        log_qc(
-            qc_dir  = QC_DIR,
-            subject = subject,
-            stage   = "gait_epochs",
-            flag    = epoch_flag,
-            metrics = {
-                "n_extracted":   n_extracted,
-                "n_total":       n_total,
-                "reject_frac":   round(reject_frac, 3),
-                "mean_seg_len":  round(mean_seg_len, 1),
-            },
+def describe_inputs(raw: mne.io.BaseRaw, cycles_df: pd.DataFrame) -> None:
+    """Print the walking data, NaN channels and the gait-cycle time range."""
+    eeg_dur = raw.times[-1]
+    print(f"  EEG sfreq    : {raw.info['sfreq']:.0f} Hz")
+    print(f"  EEG duration : {eeg_dur:.2f} s  ({raw.n_times} samples)")
+    print(f"  EEG channels : {len(raw.ch_names)}")
+    nan_by_ch = np.mean(np.isnan(raw.get_data()), axis=1)
+    bad_chs = [raw.ch_names[i] for i, f in enumerate(nan_by_ch) if f > 0.01]
+    if bad_chs:
+        print(f"  Channels with >1% NaN ({len(bad_chs)}): {bad_chs}")
+    gait_t0, gait_t1 = cycles_df["rhs_start_s"].min(), cycles_df["rhs_end_s"].max()
+    print(f"\n  Gait cycles loaded : {len(cycles_df)}")
+    print(f"  Gait time range    : {gait_t0:.2f} - {gait_t1:.2f} s")
+    print(f"  Mean cycle duration: {cycles_df['duration_s'].mean():.3f} s")
+    if gait_t0 < 0 or gait_t1 > eeg_dur + 1.0:
+        print(
+            f"\n  WARNING: gait cycles [{gait_t0:.1f}, {gait_t1:.1f}] s extend beyond "
+            f"EEG [0.0, {eeg_dur:.1f}] s -- check synchronisation."
         )
-        print(f"  QC gait_epochs: {epoch_flag}  "
-              f"extracted={n_extracted}/{n_total}  "
-              f"reject_frac={reject_frac:.3f}  "
-              f"mean_seg_len={mean_seg_len:.1f} samples")
 
-    except FileNotFoundError as e:
-        print(f"\n  [SKIP] sub-{subject}: file not found -- {e}")
-        continue
-    except Exception as e:
-        print(f"\n  [ERROR] sub-{subject}: unexpected error -- {e}")
-        import traceback
-        traceback.print_exc()
-        continue
 
-print("\nGAIT SEGMENTATION COMPLETE")
-print(f"\nDone. Processed {len(SUBJECTS)} subject(s): {SUBJECTS}")
+def log_epochs_qc(n_extracted: int, n_total: int, seg_lengths, dirs: dict, subject: str) -> None:
+    """Write the stage-4 QC record (cycles kept and rejected)."""
+    reject_frac = 1.0 - n_extracted / n_total if n_total > 0 else 1.0
+    mean_seg_len = float(np.mean(seg_lengths))
+    flag = gait_epochs_flag(n_extracted, reject_frac)
+    metrics = {
+        "n_extracted": n_extracted,
+        "n_total": n_total,
+        "reject_frac": round(reject_frac, 3),
+        "mean_seg_len": round(mean_seg_len, 1),
+    }
+    log_qc(qc_dir=dirs["qc"], subject=subject, stage="gait_epochs", flag=flag, metrics=metrics)
+    print(
+        f"  QC gait_epochs: {flag}  extracted={n_extracted}/{n_total}  "
+        f"reject_frac={reject_frac:.3f}  mean_seg_len={mean_seg_len:.1f} samples"
+    )
+
+
+def process_subject(subject: str, dirs: dict) -> None:
+    """Extract, save and QC the gait-cycle segments of one subject."""
+    raw_path = dirs["clean"] / f"sub-{subject}_desc-icaClean_concat_raw.fif"
+    cycles_path = dirs["gait_events"] / f"sub-{subject}_cycles.tsv"
+    paths = tuple(
+        dirs["gaitepochs"] / f"sub-{subject}_{name}"
+        for name in ("gait_segments.npy", "gait_sfreq.npy", "cycles_kept.tsv")
+    )
+    if stage_already_done(
+        list(paths),
+        inputs=[raw_path, cycles_path],
+        validate=lambda: np.load(paths[0], allow_pickle=True),
+    ):
+        print(f"  Already complete -- skipping sub-{subject}")
+        return
+    if not raw_path.exists():
+        print(f"  ICA-corrected EEG not found, skipping: {raw_path.name}")
+        return
+    raw = annotation_segment(mne.io.read_raw_fif(raw_path, preload=True, verbose=False), "CS")
+    cycles_df = pd.read_csv(cycles_path, sep="\t")
+    if len(cycles_df) == 0:
+        print("  ERROR: cycles.tsv is empty -- skipping subject.")
+        return
+    describe_inputs(raw, cycles_df)
+    result = extract_cycle_segments(raw, cycles_df)
+    n_extracted = len(result.segments)
+    print(f"\n  Extracted  : {n_extracted} / {len(cycles_df)} cycles")
+    print(f"  Skipped OOB: {result.n_out_of_bounds}\n  Skipped bad: {result.n_bad}")
+    for reason in result.rejection_log:
+        print(f"    rejected: {reason}")
+    if n_extracted == 0:
+        print("  No segments extracted -- skipping subject.")
+        return
+    seg_lengths = [s.shape[-1] for s in result.segments]
+    print(f"  Segment lengths: min={min(seg_lengths)}  max={max(seg_lengths)} samples")
+    save_cycle_segments(result.segments, raw.info["sfreq"], result.kept_rows, paths)
+    print("\n  Saved -> " + ", ".join(p.name for p in paths))
+    log_epochs_qc(n_extracted, len(cycles_df), seg_lengths, dirs, subject)
+
+
+def main() -> None:
+    """Run stage 4 for one or all subjects."""
+    subjects = subjects_from_command_line("Gait-cycle segmentation (reference stage 4).")
+    dirs = get_dataset_dirs(DATASET)
+    run_for_subjects(subjects, lambda subject: process_subject(subject, dirs))
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,220 @@
+==============================================================================
+SUMMARY
+==============================================================================
+Subjects examined            : 19 (sub-001..sub-019)
+Unique raw recordings (fdt)   : 16
+Duplicate fdt groups          : [['005', '007'], ['006', '008'], ['009', '013']]
+Subjects failing header read  : 0
+Subjects failing tail read    : 1 (['019'])
+Local BIDS manifest w/ hashes : NOT AVAILABLE (no git-annex/.datalad shipped)
+Supplementary S3 ETag check   : see Check 2 for per-file result (multipart ETags are not directly comparable)
+
+See full checks below for per-subject detail.
+
+==============================================================================
+CHECK 1 -- Content hashing (SHA-256) of raw signal, headers, sidecars
+==============================================================================
+
+sub       fdt_size  fdt_hash (first 12)set_hash      events_hash   channels_hash 
+001      402013936  0c947859e71d  4d98de8853c4  9ae1c75125ab  235457ef3c05  
+002      480552944  246b3ad08497  dcee560e8162  963b9a24f59a  235457ef3c05  
+003      443886524  ea11a2f37ce9  4a41d5af9217  c428d314a1eb  235457ef3c05  
+004      425168868  bd865c179b06  d65d0555b7df  ce0776f9370d  235457ef3c05  
+005      445779140  e39a849155fe  9fa957161b97  841b58963143  235457ef3c05  
+006      451953592  ce9d7ae61fbc  1a60ec475224  d5b6eb2d3755  235457ef3c05  
+007      445779140  e39a849155fe  e4a0ea695385  841b58963143  235457ef3c05  
+008      451953592  ce9d7ae61fbc  e9c369517d91  c208e0b0453b  235457ef3c05  
+009      460812064  a6d00b1cbe14  4c24ce1b8a1f  15d45c39e670  235457ef3c05  
+010      463288384  767876cf5006  c0b81576752f  fa526167bcc3  235457ef3c05  
+011      463571660  b34d379df7d9  57818191bfdd  273d4a70d6aa  235457ef3c05  
+012      392184768  6e4e7b293dc3  026cfaa7c9fd  72e23cff339f  235457ef3c05  
+013      460812064  a6d00b1cbe14  640cb0ed02bd  15d45c39e670  235457ef3c05  
+014      459553804  a113895003e0  92be416379e0  0b09c934c104  235457ef3c05  
+015      451062760  a3593c93038b  a164cd4e7cd4  d0fa476c35b0  235457ef3c05  
+016      467968736  ac96f73f3156  e9d7c21f1950  84d3ced2c6e7  235457ef3c05  
+017      365831256  13285f74e386  d1155371d961  ead5b0c81063  235457ef3c05  
+018      476070668  909a86624c1b  40737d8605e9  918dcf9308c7  235457ef3c05  
+019      108569620  60efe80ef808  01ee5dc811fe  e7e798774ad2  235457ef3c05  
+
+--- Subjects sharing an identical fdt_hash (signal duplicates) ---
+  ['005', '007']  -- SAME events (clean duplicate)
+  ['006', '008']  -- DIFFERENT events (inconsistent partial duplicate)
+  ['009', '013']  -- SAME events (clean duplicate)
+
+--- Subjects sharing an identical events_hash ---
+  ['005', '007']
+  ['009', '013']
+
+==============================================================================
+CHECK 2 -- Cross-check against a shipped manifest / checksum source
+==============================================================================
+
+Local manifest/metadata search in datasets/jacobsen/d00_raw/:
+  .bidsignore                  not present
+  dataset_description.json     FOUND
+    -> parsed OK, 6 top-level keys, no per-file hashes
+  .datalad                     not present
+  .git                         not present
+  *.json sidecars found: 59 (per-subject task/electrode metadata, not per-file checksums)
+
+  No git-annex or DataLad metadata present -- openneuro-py's HTTP
+  download does not preserve git-annex key/manifest structure.
+  NO LOCAL MANIFEST WITH EXPECTED HASHES/SIZES IS AVAILABLE.
+  Integrity below relies on (a) internal consistency (Check 1/3)
+  and (b) the supplementary S3 ETag comparison immediately below.
+
+--- Supplementary (not shipped with the dataset): OpenNeuro S3 ETag check ---
+Fetching object listing from https://s3.amazonaws.com/openneuro.org/ds003039/ ...
+  Retrieved 221 object entries from S3.
+
+sub   file        etag_type       match     
+001   fdt         md5             MATCH     
+001   set         md5             MATCH     
+002   fdt         md5             MATCH     
+002   set         md5             MATCH     
+003   fdt         md5             MATCH     
+003   set         md5             MATCH     
+004   fdt         md5             MATCH     
+004   set         md5             MATCH     
+005   fdt         md5             MATCH     
+005   set         md5             MATCH     
+006   fdt         md5             MATCH     
+006   set         md5             MATCH     
+007   fdt         md5             MATCH     
+007   set         md5             MATCH     
+008   fdt         md5             MATCH     
+008   set         md5             MATCH     
+009   fdt         md5             MATCH     
+009   set         md5             MATCH     
+010   fdt         md5             MATCH     
+010   set         md5             MATCH     
+011   fdt         md5             MATCH     
+011   set         md5             MATCH     
+012   fdt         md5             MATCH     
+012   set         md5             MATCH     
+013   fdt         md5             MATCH     
+013   set         md5             MATCH     
+014   fdt         md5             MATCH     
+014   set         md5             MATCH     
+015   fdt         md5             MATCH     
+015   set         md5             MATCH     
+016   fdt         md5             MATCH     
+016   set         md5             MATCH     
+017   fdt         md5             MATCH     
+017   set         md5             MATCH     
+018   fdt         md5             MATCH     
+018   set         md5             MATCH     
+019   fdt         md5             MATCH     
+019   set         md5             MATCH     
+
+==============================================================================
+CHECK 3 -- Load-level integrity per subject (MNE, read-only)
+==============================================================================
+
+dtype=float32 (4 bytes) assumed for .fdt (standard EEGLAB binary data format).
+
+sub   header  tail_read   n_times(hdr) n_times(fdt)match    sfreq  n_ch n_eeg    dur_s
+001   OK      OK               1500052    1500052.0OK         500    67    64   3000.1
+002   OK      OK               1793108    1793108.0OK         500    67    64   3586.2
+003   OK      OK               1656293    1656293.0OK         500    67    64   3312.6
+004   OK      OK               1586451    1586451.0OK         500    67    64   3172.9
+005   OK      OK               1663355    1663355.0OK         500    67    64   3326.7
+006   OK      OK               1686394    1686394.0OK         500    67    64   3372.8
+007   OK      OK               1663355    1663355.0OK         500    67    64   3326.7
+008   OK      OK               1686394    1686394.0OK         500    67    64   3372.8
+009   OK      OK               1719448    1719448.0OK         500    67    64   3438.9
+010   OK      OK               1728688    1728688.0OK         500    67    64   3457.4
+011   OK      OK               1729745    1729745.0OK         500    67    64   3459.5
+012   OK      OK               1463376    1463376.0OK         500    67    64   2926.8
+013   OK      OK               1719448    1719448.0OK         500    67    64   3438.9
+014   OK      OK               1714753    1714753.0OK         500    67    64   3429.5
+015   OK      OK               1683070    1683070.0OK         500    67    64   3366.1
+016   OK      OK               1746152    1746152.0OK         500    67    64   3492.3
+017   OK      OK               1365042    1365042.0OK         500    67    64   2730.1
+018   OK      OK               1630379    1630379.0OK         500    73    73   3260.8
+019   OK      FAIL             1777354     405110.5MISMATCH    500    67    64   3554.7
+
+--- Tail-read failures (full error) ---
+  sub-019: RuntimeError: Incorrect number of samples (0 != 67000), please report this error to MNE-Python developers
+
+--- Undocumented channels (present in raw .set, absent from that subject's channels.tsv) ---
+  sub-018: ['Left_Accelerometer_X', 'Left_Accelerometer_Y', 'Left_Accelerometer_Z', 'Right_Accelerometer_X', 'Right_Accelerometer_Y', 'Right_Accelerometer_Z']
+
+==============================================================================
+CHECK 4 -- Characterizing each fdt-hash duplicate group
+==============================================================================
+
+--- Group ['005', '007'] ---
+
+participants.tsv rows:
+  sub-005: {'participant_id': 'sub-005', 'gender': 'F', 'age': 21, 'handedness': 'R'}
+  sub-007: {'participant_id': 'sub-007', 'gender': 'F', 'age': 32, 'handedness': 'R'}
+
+events.tsv identical across group: True
+
+.set-embedded EEGLAB metadata (setname/filename/pnts/srate/nbchan):
+  sub-005: {'setname': 'sub-007', 'filename': 'sub-005_task-neurCorrYoung_eeg.set', 'pnts': 1663355, 'srate': 500.0, 'nbchan': 67}
+  sub-007: {'setname': 'sub-010', 'filename': 'sub-007_task-neurCorrYoung_eeg.set', 'pnts': 1663355, 'srate': 500.0, 'nbchan': 67}
+
+--- Group ['006', '008'] ---
+
+participants.tsv rows:
+  sub-006: {'participant_id': 'sub-006', 'gender': 'M', 'age': 26, 'handedness': 'R'}
+  sub-008: {'participant_id': 'sub-008', 'gender': 'F', 'age': 19, 'handedness': 'R'}
+
+events.tsv identical across group: False
+  sub-006: n_events=4562  n_value_types=47  first_onset=0.002  last_onset=3372.769
+  sub-008: n_events=5267  n_value_types=48  first_onset=-0.001  last_onset=3372.769
+
+.set-embedded EEGLAB metadata (setname/filename/pnts/srate/nbchan):
+  sub-006: {'setname': 'sub-008', 'filename': 'sub-006_task-neurCorrYoung_eeg.set', 'pnts': 1686394, 'srate': 500.0, 'nbchan': 67}
+  sub-008: {'setname': 'sub-008', 'filename': 'sub-008_task-neurCorrYoung_eeg.set', 'pnts': 1686394, 'srate': 500.0, 'nbchan': 67}
+
+--- Group ['009', '013'] ---
+
+participants.tsv rows:
+  sub-009: {'participant_id': 'sub-009', 'gender': 'F', 'age': 24, 'handedness': 'R'}
+  sub-013: {'participant_id': 'sub-013', 'gender': 'F', 'age': 23, 'handedness': 'R'}
+
+events.tsv identical across group: True
+
+.set-embedded EEGLAB metadata (setname/filename/pnts/srate/nbchan):
+  sub-009: {'setname': 'sub-013', 'filename': 'sub-009_task-neurCorrYoung_eeg.set', 'pnts': 1719448, 'srate': 500.0, 'nbchan': 67}
+  sub-013: {'setname': 'sub-013', 'filename': 'sub-013_task-neurCorrYoung_eeg.set', 'pnts': 1719448, 'srate': 500.0, 'nbchan': 67}
+
+--- Full setname-vs-BIDS-ID consistency table (all 19 subjects) ---
+(setname is the internal EEGLAB dataset name baked into the .set file
+ at whatever point the original authors last saved it -- a mismatch
+ here does not by itself prove a duplicate, but is strong corroborating
+ evidence of the participant-ID renumbering documented in the
+ dataset's own CHANGES file: 'updated participant IDs to be in
+ increasing order'. NOTE this does not fully explain the fdt-hash
+ duplicates above: e.g. sub-005 claims setname='sub-007', but
+ sub-007 itself claims setname='sub-010' -- different claimed
+ origins despite byte-identical signal, so the duplication is not
+ simply a consistent relabeling.)
+
+sub   setname     match?    
+001   sub-001     MATCH     
+002   sub-002     MATCH     
+003   sub-003     MATCH     
+004   sub-004     MATCH     
+005   sub-007     MISMATCH  
+006   sub-008     MISMATCH  
+007   sub-010     MISMATCH  
+008   sub-008     MATCH     
+009   sub-013     MISMATCH  
+010   sub-015     MISMATCH  
+011   sub-017     MISMATCH  
+012   sub-018     MISMATCH  
+013   sub-013     MATCH     
+014   sub-020     MISMATCH  
+015   sub-022     MISMATCH  
+016   sub-023     MISMATCH  
+017   sub-024     MISMATCH  
+018   sub-025     MISMATCH  
+019   sub-026     MISMATCH  
+
+==============================================================================
+CHECK 5 -- Duplicate-recording group-statistic report (see jacobsen_duplicate_recordings.txt)
+==============================================================================

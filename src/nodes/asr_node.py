@@ -3,14 +3,15 @@
 import mne
 from asrpy import ASR
 
-from src.config import ASR_WIN_LEN, ASR_WIN_OVERLAP, ASR_METHOD, ASR_MEM_SPLITS
+from src.config import ASR_MEM_SPLITS, ASR_METHOD, ASR_WIN_LEN, ASR_WIN_OVERLAP
 
 
 def apply_asr_node(
     raw: mne.io.BaseRaw,
     apply: bool,
-    calib_raw: mne.io.BaseRaw = None,
-    cutoff: float = 30.0,
+    calib_raw: mne.io.BaseRaw | None = None,
+    *,
+    cutoff: float,
     win_len: float = ASR_WIN_LEN,
     win_overlap: float = ASR_WIN_OVERLAP,
     method: str = ASR_METHOD,
@@ -29,21 +30,20 @@ def apply_asr_node(
     ----------
     raw : mne.io.BaseRaw
         Preprocessed, high-pass filtered, bad-channel-interpolated raw
-        (pre-reference). Must be preloaded. This is the recording to clean.
+        (pre-reference). Must be preloaded. This is the recording to correct.
     apply : bool
         If True, fit and apply ASR. If False, return raw unchanged
         (the skip branch of the decision node).
     calib_raw : mne.io.BaseRaw or None
         If provided, ASR is calibrated on this segment (e.g. a clean
         standing/resting recording) and then applied to raw. Fitting on a
-        separate clean segment rather than the data to be cleaned avoids
+        separate clean segment rather than the data to be corrected avoids
         suppressing task-related neural signal in the target recording
         (Mullen et al. 2015). If None, ASR is fitted on raw itself and
         asrpy auto-selects the cleanest windows internally.
     cutoff : float
-        SD threshold for artifact rejection. Gorjan et al. 2022
-        (J Neural Eng) recommend 20-30 to preserve movement-related
-        neural signal in walking EEG; default 30.
+        SD threshold for burst correction (required; src.config.ASR_CUTOFF
+        or ASR_CUTOFF_BY_MODE). Gorjan et al. 2022 (J Neural Eng).
     win_len : float
         Calibration window length in seconds.
     win_overlap : float
@@ -66,23 +66,23 @@ def apply_asr_node(
     Returns
     -------
     mne.io.BaseRaw
-        Cleaned raw (copy) if apply=True, else the input raw unchanged.
+        Corrected raw (copy) if apply=True, else the input raw unchanged.
 
     Notes
     -----
     asrpy 0.0.8: ASR.transform does raw.copy() internally and returns the
-    cleaned Raw object. The input raw is never mutated.
+    corrected Raw object. The input raw is never mutated.
     """
     if not apply:
         return raw
 
     asr = ASR(
-        sfreq       = raw.info["sfreq"],
-        cutoff      = cutoff,
-        win_len     = win_len,
-        win_overlap = win_overlap,
-        method      = method,
+        sfreq=raw.info["sfreq"],
+        cutoff=cutoff,
+        win_len=win_len,
+        win_overlap=win_overlap,
+        method=method,
     )
     fit_target = calib_raw if calib_raw is not None else raw
     asr.fit(fit_target)
-    return asr.transform(raw, mem_splits=mem_splits)   # returns cleaned Raw copy; input unchanged
+    return asr.transform(raw, mem_splits=mem_splits)  # returns corrected Raw copy; input unchanged

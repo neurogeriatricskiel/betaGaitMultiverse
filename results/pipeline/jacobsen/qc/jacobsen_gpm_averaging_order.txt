@@ -1,0 +1,11 @@
+n=14  pixel corr(ours, source)=0.9985
+beta-trace corr=0.9994
+99th pct |GPM| ours=0.793  source=0.786
+source/ours amplitude ratio (lstsq slope)=0.973
+max |source-ours| = 0.097 dB
+
+Beta 13-30 Hz double stance vs swing (ROI), paired t-test:
+  FULL    n=18  ours  : t(17) = 3.974  p = 0.000982  mean = +0.528 dB  DS > swing 16/18
+  FULL    n=18  source: t(17) = 3.906  p = 0.001136  mean = +0.494 dB  DS > swing 16/18
+  PRIMARY n=14  ours  : t(13) = 3.501  p = 0.003904  mean = +0.582 dB  DS > swing 12/14
+  PRIMARY n=14  source: t(13) = 3.439  p = 0.004404  mean = +0.544 dB  DS > swing 12/14

@@ -1,0 +1,5 @@
+subject	stage	reason	numbers	source
+019	all	raw .fdt truncated at the source (OpenNeuro)	2142427 of 24999978 declared samples	src/config_jacobsen.py; results/pipeline/jacobsen/qc/jacobsen_dataquality_audit.txt
+007	primary statistic and multiverse reporting (n = 14)	exact duplicate of sub-005 (identical .fdt and events.tsv)	kept in the n = 18 reference statistic and in every universe's t_stats; dropped from dedup_diffs	results/pipeline/jacobsen/qc/jacobsen_duplicate_recordings.txt
+013	primary statistic and multiverse reporting (n = 14)	exact duplicate of sub-009 (identical .fdt and events.tsv)	kept in the n = 18 reference statistic and in every universe's t_stats; dropped from dedup_diffs	results/pipeline/jacobsen/qc/jacobsen_duplicate_recordings.txt
+006,008	primary statistic and multiverse reporting (n = 14)	identical EEG .fdt with different events.tsv (inconsistent pair)	kept in the n = 18 reference statistic and in every universe's t_stats; dropped from dedup_diffs	results/pipeline/jacobsen/qc/jacobsen_duplicate_recordings.txt

@@ -1,0 +1,14 @@
+=== jacobsen: 27 universes, n = 14 per universe (float32 caches; max per-subject |cached - stored ROI contrast| = 0.000 dB)
+Correlation of the heel-strike-locked peak-to-peak deflection with the stored ROI contrast.
+k = number of universes. The universes share participants and are not independent;
+p values are descriptive only.
+  Fpz all universes  k = 27  Pearson r = +0.79 (p = 8.4e-07)  Spearman rho = +0.67 (p = 0.00015)
+  Fpz ASR off        k =  9  Pearson r = +0.77 (p = 0.015)  Spearman rho = +0.83 (p = 0.0053)
+  Fpz ASR sd20       k =  9  Pearson r = +0.77 (p = 0.015)  Spearman rho = +0.73 (p = 0.025)
+  Fpz ASR sd3        k =  9  Pearson r = +0.59 (p = 0.098)  Spearman rho = +0.52 (p = 0.15)
+  Cz  all universes  k = 27  Pearson r = +0.83 (p = 7.1e-08)  Spearman rho = +0.74 (p = 1.2e-05)
+  Cz  ASR off        k =  9  Pearson r = +0.77 (p = 0.015)  Spearman rho = +0.80 (p = 0.0096)
+  Cz  ASR sd20       k =  9  Pearson r = +0.87 (p = 0.0023)  Spearman rho = +1.00 (p = 0)
+  Cz  ASR sd3        k =  9  Pearson r = +0.58 (p = 0.1)  Spearman rho = +0.53 (p = 0.14)
+
+Universes with p >= 0.05: roi 0, nofrontal 0, narrow 0

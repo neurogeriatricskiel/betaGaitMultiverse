@@ -12,13 +12,23 @@ different run) -- a plain "does the output file exist" check would
 wrongly treat that subject as complete.
 """
 
+from __future__ import annotations
+
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable
 
 
-def stage_already_done(outputs, inputs=(), validate=None):
-    """
-    Check whether a stage's output already exists, is fresh relative to
-    its inputs, and (optionally) loads without error.
+def stage_already_done(
+    outputs: Iterable[str | Path],
+    inputs: Iterable[str | Path] = (),
+    validate: Callable[[], object] | None = None,
+) -> bool:
+    """Check whether a stage's outputs exist, are fresh, and (optionally) load.
+
+    Fresh means no input file is newer than the oldest output file.
 
     Parameters
     ----------

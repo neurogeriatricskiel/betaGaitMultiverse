@@ -73,7 +73,7 @@ def apply_gedai_node(
     Returns
     -------
     mne.io.BaseRaw
-        Two-stage GEDAI-cleaned raw if apply=True, else input unchanged.
+        Two-stage GEDAI-corrected raw if apply=True, else input unchanged.
     """
     if not apply:
         print("  GEDAI skipped (apply=False)")
@@ -94,13 +94,13 @@ def apply_gedai_node(
     raw_work = raw.copy()
     raw_work.set_montage("standard_1020", on_missing="ignore")
 
-    non_1020 = [ch for ch in raw_work.ch_names
-                if ch not in ch_names_1020]
+    non_1020 = [ch for ch in raw_work.ch_names if ch not in ch_names_1020]
     if non_1020:
         raw_work.info["bads"] = non_1020
         raw_work.interpolate_bads(reset_bads=True)
-        print(f"  GEDAI: interpolated {len(non_1020)} non-10-20 "
-              f"channel(s) for montage compatibility")
+        print(
+            f"  GEDAI: interpolated {len(non_1020)} non-10-20 channel(s) for montage compatibility"
+        )
 
     # ── Stage 1: broadband, conservative ───────────────────────
     gedai_bb = Gedai()
@@ -114,9 +114,7 @@ def apply_gedai_node(
         noise_multiplier=broadband_noise_multiplier,
         verbose=False,
     )
-    raw_bb = gedai_bb.transform_raw(
-        raw_work, duration=duration, overlap=overlap, verbose=False
-    )
+    raw_bb = gedai_bb.transform_raw(raw_work, duration=duration, overlap=overlap, verbose=False)
 
     # ── Stage 2: spectral, band-specific ───────────────────────
     gedai_sp = Gedai(
@@ -135,7 +133,7 @@ def apply_gedai_node(
     raw_work_clean = gedai_sp.transform_raw(raw_bb, verbose=False)
 
     # ── Restore original channel info ───────────────────────────
-    # Copy cleaned data back into the original raw object so
+    # Copy corrected data back into the original raw object so
     # channel names, positions, and annotations are preserved.
     raw_clean = raw.copy()
     raw_clean._data[:] = raw_work_clean.get_data()

@@ -1,0 +1,21 @@
+Overground GPM by band, primary cohort n = 14; double stance = 0-18 % and 50-68 %
+
+== ROI ==
+  13-20 Hz: peak +0.584 dB @   6%   trough -0.461 dB @  32%   DS - swing +0.703 dB
+  20-30 Hz: peak +0.498 dB @  57%   trough -0.440 dB @  27%   DS - swing +0.491 dB
+  10-17 Hz: peak +0.648 dB @   7%   trough -0.566 dB @ 100%   DS - swing +0.765 dB
+  20-35 Hz: peak +0.541 dB @  57%   trough -0.474 dB @  27%   DS - swing +0.534 dB
+
+== Cz ==
+  13-20 Hz: peak +0.891 dB @   5%   trough -0.566 dB @  34%   DS - swing +0.897 dB
+  20-30 Hz: peak +0.504 dB @   4%   trough -0.327 dB @  26%   DS - swing +0.451 dB
+  10-17 Hz: peak +0.970 dB @   6%   trough -0.758 dB @  35%   DS - swing +1.109 dB
+  20-35 Hz: peak +0.473 dB @  56%   trough -0.300 dB @  27%   DS - swing +0.451 dB
+
+== ROI, per-subject double stance vs swing, paired t-test ==
+  FULL    n=18  13-30 Hz: t(17) = 3.974  p = 0.000982  mean = +0.528 dB  DS > swing 16/18
+  FULL    n=18  13-20 Hz: t(17) = 3.808  p = 0.001406  mean = +0.646 dB  DS > swing 16/18
+  FULL    n=18  20-30 Hz: t(17) = 3.897  p = 0.001159  mean = +0.439 dB  DS > swing 15/18
+  PRIMARY n=14  13-30 Hz: t(13) = 3.501  p = 0.003904  mean = +0.582 dB  DS > swing 12/14
+  PRIMARY n=14  13-20 Hz: t(13) = 3.255  p = 0.006265  mean = +0.703 dB  DS > swing 12/14
+  PRIMARY n=14  20-30 Hz: t(13) = 3.571  p = 0.003417  mean = +0.491 dB  DS > swing 12/14

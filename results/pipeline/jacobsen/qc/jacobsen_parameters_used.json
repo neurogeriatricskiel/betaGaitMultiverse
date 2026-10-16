@@ -1,0 +1,206 @@
+{
+  "ACCESSION": "ds003039",
+  "ACTIVE_DATASET": "jacobsen",
+  "ALPHA": 0.05,
+  "AMP_THRESH": 0.00035,
+  "ARCHIVE_LOWPASS_HZ": 40.0,
+  "ASR_CALIBRATION_FLOOR_S": 115.0,
+  "ASR_CUTOFF": 20.0,
+  "ASR_CUTOFF_BY_MODE": {
+    "sd20": 20.0,
+    "sd3": 3.0
+  },
+  "ASR_EDGE_TRIM_S": 2.0,
+  "ASR_MEM_SPLITS": 30,
+  "ASR_METHOD": "euclid",
+  "ASR_WIN_LEN": 0.5,
+  "ASR_WIN_OVERLAP": 0.66,
+  "AUTOREJECT_N_INTERPOLATE": [
+    1,
+    2,
+    4
+  ],
+  "BAD_CHANNEL_ZSCORE": 3.0,
+  "BASELINE_EDGE_TRIM_S": 2.0,
+  "BASELINE_END_VALUE": "end_standing",
+  "BASELINE_EPOCH_DUR_S": 2.0,
+  "BASELINE_START_VALUE": "start_standing",
+  "BETA_FMAX": 30.0,
+  "BETA_FMIN": 13.0,
+  "CYCLE_LTO_MAX_FRAC": 0.3,
+  "CYCLE_MAX_DUR_S": 2.0,
+  "CYCLE_MIN_DUR_S": 0.8,
+  "DATASET": "jacobsen",
+  "DATASET_LABELS": {
+    "jacobsen": "overground",
+    "stepup": "treadmill"
+  },
+  "DECISION_LABELS": {
+    "asr_mode": "ASR",
+    "highpass_hz": "High-pass (Hz)",
+    "iclabel_rule": "IC selection"
+  },
+  "DIRS": {
+    "clean": "d03_clean",
+    "ersp": "d05_ersp",
+    "gait_events": "d01_gaitevents",
+    "gaitepochs": "d04_gaitepochs",
+    "prep": "d02_prep",
+    "qc": "d00_qc",
+    "raw": "d00_raw",
+    "roi_topo": "d05_roi_topo"
+  },
+  "DIR_DATASETS": "datasets",
+  "DIR_FIGURES": "results/figures",
+  "DIR_MULTIVERSE": "results/multiverse/jacobsen",
+  "DIR_MULTIVERSE_BRANCHES": "results/multiverse/jacobsen/branches",
+  "DIR_MULTIVERSE_COMET": "results/multiverse/jacobsen/comet",
+  "DIR_MULTIVERSE_LOWPASS40_ARCHIVE": "results/multiverse/stepup_40hz_archive",
+  "DIR_MULTIVERSE_OUTPUTS": "results/multiverse/jacobsen/outputs",
+  "DIR_PROJ": ".",
+  "DIR_QC": "results/pipeline/jacobsen/qc",
+  "DIR_RESULTS": "results",
+  "DIR_SCRIPTS": "scripts",
+  "DIR_SUPPLEMENTARY": "results/supplementary",
+  "EEG_FORMAT": "eeglab",
+  "EEG_SFREQ_NATIVE": 500.0,
+  "EPOCH_DUR": 2.0,
+  "EVENT_SOURCE": "events_tsv",
+  "GAIT_EVENT_VALUES": {
+    "LHS": [
+      "LeftHS",
+      "IC_Left"
+    ],
+    "LTO": [
+      "LeftTO",
+      "TO_Left"
+    ],
+    "RHS": [
+      "RightHS",
+      "IC_Right"
+    ],
+    "RTO": [
+      "RightTO",
+      "TO_Right"
+    ]
+  },
+  "GAIT_LOWPASS_HZ": 6.0,
+  "GAIT_MIN_STEP_S": 0.5,
+  "GAIT_MIN_STRIDE_S": 0.8,
+  "ICA_DECIM": 2,
+  "ICA_FIT_PARAMS": {
+    "extended": true
+  },
+  "ICA_METHOD": "infomax",
+  "ICLABEL_P_ARTIFACT_LIBERAL": 0.9,
+  "ICLABEL_P_BRAIN_BALANCED": 0.7,
+  "ICLABEL_P_BRAIN_CONSERVATIVE": 0.9,
+  "ICLABEL_RULE": "balanced",
+  "LINE_FREQ": 50.0,
+  "MIN_CLEAN_EPOCHS": 20,
+  "MIN_GAIT_CYCLES": 20,
+  "MONTAGE_HEAD_RADIUS_M": 0.095,
+  "MONTAGE_SOURCE": "electrodes_tsv",
+  "MULTIPLE_COMPARISON_CORRECTION": null,
+  "MULTIVERSE_GRID": {
+    "asr_mode": [
+      "off",
+      "sd3",
+      "sd20"
+    ],
+    "highpass_hz": [
+      0.5,
+      1.0,
+      2.0
+    ],
+    "iclabel_rule": [
+      "conservative",
+      "balanced",
+      "liberal"
+    ]
+  },
+  "MULTIVERSE_LOWPASS_HZ": 60.0,
+  "MULTIVERSE_NAME": "beta_gait_multiverse",
+  "MULTIVERSE_SUBJECTS": [
+    "001",
+    "002",
+    "003",
+    "004",
+    "005",
+    "006",
+    "007",
+    "008",
+    "009",
+    "010",
+    "011",
+    "012",
+    "013",
+    "014",
+    "015",
+    "016",
+    "017",
+    "018"
+  ],
+  "MULTIVERSE_TFR_FMAX": 40.0,
+  "N_COMPONENTS": 0.99,
+  "OPTION_LABELS": {
+    "asr_mode": {
+      "off": "off",
+      "sd20": "SD 20",
+      "sd3": "SD 3"
+    },
+    "highpass_hz": {
+      "0.5": "0.5",
+      "1.0": "1.0",
+      "2.0": "2.0"
+    },
+    "iclabel_rule": {
+      "balanced": "balanced",
+      "conservative": "conservative",
+      "liberal": "liberal"
+    }
+  },
+  "PIPELINE_TFR_FMAX": 60.0,
+  "RANDOM_STATE": 42,
+  "REFERENCE_HIGHPASS_HZ": 0.2,
+  "REFERENCE_ICA_FIT_HIGHPASS_HZ": 2.0,
+  "REFERENCE_LOWPASS_HZ": 60.0,
+  "REFERENCE_USE_ASR": true,
+  "REFERENCE_WARP_ANCHORS_PCT": [
+    18.0,
+    50.0,
+    68.0
+  ],
+  "ROI_CENTER_CH": "Cz",
+  "ROOT_DIRNAME": "jacobsen",
+  "SEGMENT_END_VALUE": "end_easy",
+  "SEGMENT_START_VALUE": "start_easy",
+  "STATS_TEST": "one-sample t-test of per-subject double-stance - swing vs 0 (two-sided)",
+  "SUBJECTS": [
+    "001",
+    "002",
+    "003",
+    "004",
+    "005",
+    "006",
+    "007",
+    "008",
+    "009",
+    "010",
+    "011",
+    "012",
+    "013",
+    "014",
+    "015",
+    "016",
+    "017",
+    "018"
+  ],
+  "TARGET_SFREQ": 250,
+  "TASK_NAME": "neurCorrYoung",
+  "TFR_EDGE_CROP": 0.05,
+  "TFR_FMIN": 8.0,
+  "TFR_N_CYCLES_DIVISOR": 2.0,
+  "TFR_N_POINTS": 101,
+  "USE_ASR": true
+}

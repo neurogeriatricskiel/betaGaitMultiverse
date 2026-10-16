@@ -1,21 +1,38 @@
-"""
-ICA utilities: fitting, ICLabel classification, and QC plotting.
-"""
+"""ICA utilities: fitting, ICLabel classification, and QC plotting."""
+
+from __future__ import annotations
 
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import matplotlib.pyplot as plt
 import mne
 import numpy as np
 from mne_icalabel.iclabel import iclabel_label_components
 
-from src.config import N_COMPONENTS, ICA_METHOD, ICA_FIT_PARAMS, ICA_DECIM, RANDOM_STATE
+from src.config import (
+    ICA_DECIM,
+    ICA_METHOD,
+    ICLABEL_P_ARTIFACT_LIBERAL,
+    ICLABEL_P_BRAIN_BALANCED,
+    ICLABEL_P_BRAIN_CONSERVATIVE,
+    N_COMPONENTS,
+    RANDOM_STATE,
+)
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 # Column order of the raw ICLabel probability matrix
 # (mne_icalabel.label_components.ICALABEL_METHODS_NUMERICAL_TO_STRING["iclabel"]).
 ICLABEL_CLASSES = [
-    "brain", "muscle artifact", "eye blink", "heart beat",
-    "line noise", "channel noise", "other",
+    "brain",
+    "muscle artifact",
+    "eye blink",
+    "heart beat",
+    "line noise",
+    "channel noise",
+    "other",
 ]
 
 
@@ -23,12 +40,33 @@ def run_ica(
     epochs: mne.Epochs,
     n_components: float | int = N_COMPONENTS,
     method: str = ICA_METHOD,
-    fit_params: dict | None = None,
+    *,
+    fit_params: dict | None,
     decim: int = ICA_DECIM,
     random_state: int = RANDOM_STATE,
 ) -> mne.preprocessing.ICA:
-    """Fit Extended Infomax ICA on clean epochs and return the fitted ICA object."""
+    """Fit ICA on clean epochs.
 
+    Parameters
+    ----------
+    epochs : mne.Epochs
+        AutoReject-repaired epochs to fit on.
+    n_components : float | int
+        Number of components, or fraction of variance to retain.
+    method : str
+        ICA method.
+    fit_params : dict | None
+        Required keyword: ``src.config.ICA_FIT_PARAMS`` (Extended Infomax).
+    decim : int
+        Decimation factor used for fitting.
+    random_state : int
+        Random seed.
+
+    Returns
+    -------
+    mne.preprocessing.ICA
+        The fitted ICA.
+    """
     rank = mne.compute_rank(epochs, rank="info")
     print(f"  Data rank        : {rank}")
 
@@ -48,10 +86,10 @@ def label_and_mark_ica(
     ica: mne.preprocessing.ICA,
     epochs: mne.Epochs,
     rule: str = "balanced",
-    artifact_rule_fn=None,
+    artifact_rule_fn: Callable[[np.ndarray], list[int]] | None = None,
 ) -> dict:
     """
-    Run ICLabel on epochs and mark components for exclusion, return updated ICA.
+    Run ICLabel on epochs and set ``ica.exclude`` in place.
 
     Calls the exact same select_ics_by_rule() the multiverse pipeline uses
     (src.multiverse_pipeline.run_subject_multiverse) so the reference
@@ -66,18 +104,29 @@ def label_and_mark_ica(
 
     Parameters
     ----------
-    artifact_rule_fn : optional callable(probs) -> list[int]. If given,
-        used INSTEAD of select_ics_by_rule(probs, rule) -- e.g.
+    ica : mne.preprocessing.ICA
+        Fitted ICA; its ``exclude`` is overwritten.
+    epochs : mne.Epochs
+        Epochs used to fit ``ica``.
+    rule : str
+        Rule name passed to select_ics_by_rule().
+    artifact_rule_fn : callable(probs) -> list[int], optional
+        If given, used INSTEAD of select_ics_by_rule(probs, rule) -- e.g.
         select_ics_jacobsen_paper_rule below, kept deliberately decoupled
         from this shared rule/multiverse vocabulary. `rule` is used only
         for the printed label in that case.
+
+    Returns
+    -------
+    dict
+        Keys ``labels``, ``probs``, ``brain_ics``, ``exclude_ics``.
     """
     probs, labels = iclabel_probabilities(ica, epochs)
     if artifact_rule_fn is not None:
         exclude_ics = artifact_rule_fn(probs)
     else:
         exclude_ics = select_ics_by_rule(probs, rule)
-    brain_ics   = [i for i in range(len(labels)) if i not in exclude_ics]
+    brain_ics = [i for i in range(len(labels)) if i not in exclude_ics]
 
     print(f"\n  ICLabel classification (rule={rule}):")
     for i, label in enumerate(labels):
@@ -89,9 +138,9 @@ def label_and_mark_ica(
     print(f"  Excluding: {len(exclude_ics)} artefact ICs")
 
     return {
-        "labels":      labels,
-        "probs":       probs,
-        "brain_ics":   brain_ics,
+        "labels": labels,
+        "probs": probs,
+        "brain_ics": brain_ics,
         "exclude_ics": exclude_ics,
     }
 
@@ -110,8 +159,10 @@ def iclabel_probabilities(
 
     Parameters
     ----------
-    ica    : fitted mne.preprocessing.ICA
-    epochs : mne.Epochs used to fit `ica` (ICLabel needs these for features)
+    ica : mne.preprocessing.ICA
+        Fitted ICA.
+    epochs : mne.Epochs
+        Epochs used to fit `ica` (ICLabel needs these for features).
 
     Returns
     -------
@@ -128,17 +179,18 @@ def iclabel_probabilities(
 
 def select_ics_by_rule(probs: np.ndarray, rule: str) -> list[int]:
     """
-    Decide which ICA components to exclude from an existing ICLabel
-    probability matrix, without refitting ICA or ICLabel.
+    Select ICA components to exclude from an existing ICLabel probability matrix.
+
+    No refitting of ICA or ICLabel is needed.
 
     Parameters
     ----------
     probs : ndarray, shape (n_components, 7)
         From iclabel_probabilities(), columns ordered per ICLABEL_CLASSES.
     rule  : {"conservative", "balanced", "liberal"}
-        conservative -> keep only ICs with P(brain) > 0.9
-        balanced     -> keep only ICs with P(brain) > 0.7
-        liberal      -> reject only ICs with P(muscle) > 0.9 or P(eye) > 0.9
+        conservative -> keep only ICs with P(brain) > ICLABEL_P_BRAIN_CONSERVATIVE (0.9)
+        balanced     -> keep only ICs with P(brain) > ICLABEL_P_BRAIN_BALANCED (0.7)
+        liberal      -> reject only ICs with P(muscle) or P(eye) > ICLABEL_P_ARTIFACT_LIBERAL (0.9)
 
     Returns
     -------
@@ -147,11 +199,11 @@ def select_ics_by_rule(probs: np.ndarray, rule: str) -> list[int]:
     """
     p_brain, p_muscle, p_eye = probs[:, 0], probs[:, 1], probs[:, 2]
     if rule == "conservative":
-        keep = p_brain > 0.9
+        keep = p_brain > ICLABEL_P_BRAIN_CONSERVATIVE
     elif rule == "balanced":
-        keep = p_brain > 0.7
+        keep = p_brain > ICLABEL_P_BRAIN_BALANCED
     elif rule == "liberal":
-        keep = ~((p_muscle > 0.9) | (p_eye > 0.9))
+        keep = ~((p_muscle > ICLABEL_P_ARTIFACT_LIBERAL) | (p_eye > ICLABEL_P_ARTIFACT_LIBERAL))
     else:
         raise ValueError(f"Unknown iclabel_rule: {rule!r}")
     return [i for i, k in enumerate(keep) if not k]
@@ -159,8 +211,9 @@ def select_ics_by_rule(probs: np.ndarray, rule: str) -> list[int]:
 
 def select_ics_jacobsen_paper_rule(probs: np.ndarray) -> list[int]:
     """
-    Jacobsen et al.'s own paper-exact ICLabel artifact-rejection rule:
-    exclude a component if P(eye) > 0.9 OR P(muscle) > 0.9.
+    Select ICs to exclude with Jacobsen et al.'s paper-exact ICLabel rule.
+
+    Exclude a component if P(eye) > 0.9 OR P(muscle) > 0.9.
 
     Deliberately a standalone function, NOT a branch of
     select_ics_by_rule() above and NOT wired through iclabel_rule/
@@ -179,9 +232,10 @@ def select_ics_jacobsen_paper_rule(probs: np.ndarray) -> list[int]:
     Returns
     -------
     exclude_ics : list of int
+        Component indices to exclude.
     """
     p_muscle, p_eye = probs[:, 1], probs[:, 2]
-    keep = ~((p_muscle > 0.9) | (p_eye > 0.9))
+    keep = ~((p_muscle > ICLABEL_P_ARTIFACT_LIBERAL) | (p_eye > ICLABEL_P_ARTIFACT_LIBERAL))
     return [i for i, k in enumerate(keep) if not k]
 
 
@@ -190,8 +244,17 @@ def save_ica_component_plots(
     output_dir: Path,
     subject: str,
 ) -> None:
-    """Save topography plots for all ICA components to the output directory."""
+    """Save topography plots for all ICA components to the output directory.
 
+    Parameters
+    ----------
+    ica : mne.preprocessing.ICA
+        Fitted ICA.
+    output_dir : Path
+        Directory for the PNG files.
+    subject : str
+        Subject ID used in the file names.
+    """
     figs = ica.plot_components(show=False)
     if not isinstance(figs, list):
         figs = [figs]

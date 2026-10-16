@@ -1,0 +1,90 @@
+=== stepup: ICA audit (rule balanced)
+
+sub-S1: 38 ICs, removed 24 {'brain': 6, 'muscle': 12, 'eye': 2, 'channel_noise': 1, 'other': 3}, kept 14; recomputed exclusions equal saved: True
+  Retained ICs with P(eye) or P(muscle) > 0.3: none
+  Fpz beta (13-30 Hz, walking) variance after ICA / before: 16.8 %; retained ICs alone: 17.0 %
+  Largest single retained ICs at Fpz (% of pre-ICA beta variance): IC6 3.5 % (brain 0.89; eye 0.00, muscle 0.01), IC1 2.5 % (brain 1.00; eye 0.00, muscle 0.00), IC25 1.8 % (brain 0.89; eye 0.00, muscle 0.00)
+
+sub-S2: 20 ICs, removed 11 {'brain': 1, 'muscle': 4, 'eye': 4, 'other': 2}, kept 9; recomputed exclusions equal saved: True
+  Retained ICs with P(eye) or P(muscle) > 0.3: none
+  Fpz beta (13-30 Hz, walking) variance after ICA / before: 26.9 %; retained ICs alone: 26.0 %
+  Largest single retained ICs at Fpz (% of pre-ICA beta variance): IC11 9.4 % (brain 0.99; eye 0.00, muscle 0.00), IC5 5.8 % (brain 0.97; eye 0.00, muscle 0.00), IC8 4.4 % (brain 0.84; eye 0.00, muscle 0.00)
+
+sub-S3: 33 ICs, removed 16 {'brain': 4, 'muscle': 2, 'eye': 3, 'other': 7}, kept 17; recomputed exclusions equal saved: True
+  Retained ICs with P(eye) or P(muscle) > 0.3: none
+  Fpz beta (13-30 Hz, walking) variance after ICA / before: 72.6 %; retained ICs alone: 73.8 %
+  Largest single retained ICs at Fpz (% of pre-ICA beta variance): IC1 64.1 % (brain 0.97; eye 0.01, muscle 0.00), IC6 5.5 % (brain 1.00; eye 0.00, muscle 0.00), IC3 3.9 % (brain 1.00; eye 0.00, muscle 0.00)
+
+sub-S4: 38 ICs, removed 29 {'muscle': 25, 'eye': 1, 'other': 3}, kept 9; recomputed exclusions equal saved: True
+  Retained ICs with P(eye) or P(muscle) > 0.3: none
+  Fpz beta (13-30 Hz, walking) variance after ICA / before: 15.3 %; retained ICs alone: 15.4 %
+  Largest single retained ICs at Fpz (% of pre-ICA beta variance): IC1 14.2 % (brain 1.00; eye 0.00, muscle 0.00), IC9 0.6 % (brain 1.00; eye 0.00, muscle 0.00), IC33 0.4 % (brain 0.74; eye 0.01, muscle 0.01)
+
+sub-S7: 34 ICs, removed 25 {'brain': 1, 'muscle': 10, 'eye': 5, 'other': 9}, kept 9; recomputed exclusions equal saved: True
+  Retained ICs with P(eye) or P(muscle) > 0.3: none
+  Fpz beta (13-30 Hz, walking) variance after ICA / before: 46.2 %; retained ICs alone: 45.8 %
+  Largest single retained ICs at Fpz (% of pre-ICA beta variance): IC2 25.2 % (brain 0.94; eye 0.00, muscle 0.00), IC1 23.2 % (brain 0.98; eye 0.00, muscle 0.00), IC10 0.7 % (brain 0.99; eye 0.00, muscle 0.00)
+
+sub-S9: 37 ICs, removed 30 {'brain': 7, 'muscle': 12, 'eye': 3, 'other': 8}, kept 7; recomputed exclusions equal saved: True
+  Retained ICs with P(eye) or P(muscle) > 0.3: none
+  Fpz beta (13-30 Hz, walking) variance after ICA / before: 30.6 %; retained ICs alone: 30.5 %
+  Largest single retained ICs at Fpz (% of pre-ICA beta variance): IC0 28.1 % (brain 0.88; eye 0.00, muscle 0.01), IC17 3.0 % (brain 0.94; eye 0.00, muscle 0.01), IC8 2.8 % (brain 0.99; eye 0.00, muscle 0.00)
+
+sub-S10: 38 ICs, removed 37 {'brain': 3, 'muscle': 15, 'eye': 6, 'other': 13}, kept 1; recomputed exclusions equal saved: True
+  Retained ICs with P(eye) or P(muscle) > 0.3: none
+  Fpz beta (13-30 Hz, walking) variance after ICA / before: 33.0 %; retained ICs alone: 32.7 %
+  Largest single retained ICs at Fpz (% of pre-ICA beta variance): IC1 32.7 % (brain 0.99; eye 0.00, muscle 0.00)
+
+sub-S11: 31 ICs, removed 16 {'brain': 3, 'muscle': 3, 'eye': 5, 'channel_noise': 1, 'other': 4}, kept 15; recomputed exclusions equal saved: True
+  Retained ICs with P(eye) or P(muscle) > 0.3: none
+  Fpz beta (13-30 Hz, walking) variance after ICA / before: 64.6 %; retained ICs alone: 50.0 %
+  Largest single retained ICs at Fpz (% of pre-ICA beta variance): IC3 47.9 % (brain 0.89; eye 0.01, muscle 0.00), IC4 2.5 % (brain 1.00; eye 0.00, muscle 0.00), IC11 0.9 % (brain 0.94; eye 0.00, muscle 0.01)
+
+sub-S12: 35 ICs, removed 31 {'brain': 2, 'muscle': 22, 'eye': 1, 'other': 6}, kept 4; recomputed exclusions equal saved: True
+  Retained ICs with P(eye) or P(muscle) > 0.3: none
+  Fpz beta (13-30 Hz, walking) variance after ICA / before: 2.3 %; retained ICs alone: 2.1 %
+  Largest single retained ICs at Fpz (% of pre-ICA beta variance): IC6 1.7 % (brain 0.71; eye 0.01, muscle 0.02), IC14 0.4 % (brain 0.96; eye 0.00, muscle 0.00), IC9 0.2 % (brain 0.73; eye 0.00, muscle 0.01)
+
+sub-S13: 32 ICs, removed 19 {'brain': 2, 'muscle': 8, 'eye': 6, 'other': 3}, kept 13; recomputed exclusions equal saved: True
+  Retained ICs with P(eye) or P(muscle) > 0.3: none
+  Fpz beta (13-30 Hz, walking) variance after ICA / before: 102.6 %; retained ICs alone: 95.1 %
+  Largest single retained ICs at Fpz (% of pre-ICA beta variance): IC2 127.2 % (brain 0.99; eye 0.00, muscle 0.00), IC1 12.6 % (brain 0.99; eye 0.00, muscle 0.00), IC4 2.6 % (brain 1.00; eye 0.00, muscle 0.00)
+
+sub-S14: 32 ICs, removed 24 {'brain': 1, 'muscle': 19, 'eye': 2, 'other': 2}, kept 8; recomputed exclusions equal saved: True
+  Retained ICs with P(eye) or P(muscle) > 0.3: none
+  Fpz beta (13-30 Hz, walking) variance after ICA / before: 114.9 %; retained ICs alone: 117.1 %
+  Largest single retained ICs at Fpz (% of pre-ICA beta variance): IC0 43.2 % (brain 0.94; eye 0.00, muscle 0.00), IC17 10.4 % (brain 0.89; eye 0.00, muscle 0.00), IC1 7.7 % (brain 0.96; eye 0.01, muscle 0.00)
+
+sub-S15: 33 ICs, removed 22 {'brain': 3, 'muscle': 16, 'eye': 1, 'other': 2}, kept 11; recomputed exclusions equal saved: True
+  Retained ICs with P(eye) or P(muscle) > 0.3: none
+  Fpz beta (13-30 Hz, walking) variance after ICA / before: 72.3 %; retained ICs alone: 71.5 %
+  Largest single retained ICs at Fpz (% of pre-ICA beta variance): IC0 69.8 % (brain 0.98; eye 0.00, muscle 0.01), IC3 1.6 % (brain 0.93; eye 0.00, muscle 0.01), IC4 1.5 % (brain 1.00; eye 0.00, muscle 0.00)
+
+sub-S16: 32 ICs, removed 25 {'muscle': 19, 'eye': 1, 'other': 5}, kept 7; recomputed exclusions equal saved: True
+  Retained ICs with P(eye) or P(muscle) > 0.3: none
+  Fpz beta (13-30 Hz, walking) variance after ICA / before: 66.5 %; retained ICs alone: 62.5 %
+  Largest single retained ICs at Fpz (% of pre-ICA beta variance): IC3 60.0 % (brain 0.94; eye 0.00, muscle 0.00), IC8 2.3 % (brain 0.84; eye 0.00, muscle 0.01), IC4 1.8 % (brain 0.98; eye 0.00, muscle 0.00)
+
+sub-S17: 27 ICs, removed 15 {'brain': 3, 'muscle': 6, 'eye': 2, 'other': 4}, kept 12; recomputed exclusions equal saved: True
+  Retained ICs with P(eye) or P(muscle) > 0.3: none
+  Fpz beta (13-30 Hz, walking) variance after ICA / before: 79.9 %; retained ICs alone: 63.9 %
+  Largest single retained ICs at Fpz (% of pre-ICA beta variance): IC0 29.8 % (brain 0.99; eye 0.00, muscle 0.00), IC3 8.3 % (brain 0.96; eye 0.00, muscle 0.00), IC5 2.7 % (brain 0.90; eye 0.00, muscle 0.00)
+
+sub-S18: 21 ICs, removed 11 {'brain': 1, 'muscle': 8, 'eye': 2}, kept 10; recomputed exclusions equal saved: True
+  Retained ICs with P(eye) or P(muscle) > 0.3: none
+  Fpz beta (13-30 Hz, walking) variance after ICA / before: 108.1 %; retained ICs alone: 87.7 %
+  Largest single retained ICs at Fpz (% of pre-ICA beta variance): IC2 22.0 % (brain 0.83; eye 0.00, muscle 0.00), IC4 20.3 % (brain 0.99; eye 0.00, muscle 0.00), IC3 10.8 % (brain 1.00; eye 0.00, muscle 0.00)
+
+sub-S20: 29 ICs, removed 19 {'brain': 3, 'muscle': 10, 'eye': 5, 'other': 1}, kept 10; recomputed exclusions equal saved: True
+  Retained ICs with P(eye) or P(muscle) > 0.3: none
+  Fpz beta (13-30 Hz, walking) variance after ICA / before: 99.3 %; retained ICs alone: 87.2 %
+  Largest single retained ICs at Fpz (% of pre-ICA beta variance): IC1 74.1 % (brain 0.99; eye 0.00, muscle 0.00), IC3 10.2 % (brain 1.00; eye 0.00, muscle 0.00), IC2 5.9 % (brain 1.00; eye 0.00, muscle 0.00)
+
+sub-S23: 27 ICs, removed 11 {'brain': 3, 'eye': 2, 'heart': 1, 'other': 5}, kept 16; recomputed exclusions equal saved: True
+  Retained ICs with P(eye) or P(muscle) > 0.3: none
+  Fpz beta (13-30 Hz, walking) variance after ICA / before: 74.1 %; retained ICs alone: 57.3 %
+  Largest single retained ICs at Fpz (% of pre-ICA beta variance): IC7 40.9 % (brain 0.98; eye 0.01, muscle 0.00), IC6 10.7 % (brain 1.00; eye 0.00, muscle 0.00), IC0 7.1 % (brain 0.98; eye 0.01, muscle 0.00)
+
+Across 17 subjects: Fpz beta variance kept after ICA median 66.5 % (range 2.3-114.9); retained ICs alone median 57.3 %
+all n=17: t(16) = 5.129  p = 0.000101  mean diff = +1.949 dB  DS>swing 16/17
+without S10: t(15) = 4.736  p = 0.000265  mean diff = +1.850 dB  DS>swing 15/16
