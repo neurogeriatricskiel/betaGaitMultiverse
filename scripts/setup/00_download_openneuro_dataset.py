@@ -20,7 +20,8 @@ from src.config import config_jacobsen
 from src.paths import get_dataset_dirs
 
 
-def main():
+def main() -> None:
+    """Download ds003039 into datasets/jacobsen/d00_raw."""
     import openneuro as on  # imported here: openneuro-py fails at import in some environments
 
     on.download(dataset=config_jacobsen.ACCESSION, target_dir=get_dataset_dirs("jacobsen")["raw"])
