@@ -1,28 +1,59 @@
 [project]
 name = "betagaitmultiverse"
 version = "0.1.0"
-description = "Multiverseanalysis of gait related EEG beta band activity"
+description = "Multiverse analysis of gait-related EEG beta-band activity (treadmill and overground walking)"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = "==3.13.*"
+# Exact versions of the environment that produced the stored results.
 dependencies = [
-    "autoreject>=0.4.3",
-    "ipykernel>=7.2.0",
-    "ipython>=9.11.0",
-    "mne>=1.11.0",
-    "mne-bids>=0.18.0",
-    "mne-icalabel>=0.8.1",
-    "openneuro-py>=2026.3.0",
-    "pip>=26.0.1",
+    "asrpy==0.0.8",
+    "autoreject==0.4.3",
+    "comet-toolbox==1.2.4",
+    "matplotlib==3.10.8",
+    "mne==1.11.0",
+    "mne-icalabel==0.8.1",
+    "numpy==2.4.3",
+    "openneuro-py==2026.7.0",
+    "pandas==3.0.1",
+    "scipy==1.17.1",
+    "torch==2.10.0",  # ICLabel backend of mne-icalabel
 ]
+
+[project.optional-dependencies]
+dev = ["pytest==9.1.1", "ruff==0.17.0"]
+# GEDAI was evaluated and excluded (docs/decisions.md); only src/nodes/gedai_node.py uses it.
+gedai = ["gedai==0.1.0"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]
 
-[tool.uv.workspace]
-members = [
-    "betagaitmultiverse",
-]
-
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+extend-exclude = ["results", "datasets", "docs", "scripts/diag"]
+
+[tool.ruff.lint]
+# pycodestyle, pyflakes, import order, bugbear, pyupgrade, pep8-naming, docstrings.
+select = ["E", "F", "I", "B", "UP", "N", "D"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+[tool.ruff.lint.per-file-ignores]
+# COMET analysis template: {{ ... }} placeholders are rendered by Jinja and the
+# function body is copied into every universe script (no docstring there).
+"scripts/mulana01_create_multiverse.py" = ["F821", "D103"]
+# Tests: descriptive test names instead of docstrings.
+"tests/*" = ["D"]
+# Manuscript notation: anchors A_lto/A_lhs/A_rto, left/right signals L_/R_signal.
+"src/ersp.py" = ["N806"]
+"src/gait_cycles.py" = ["N803"]
+# GEDAI check output (methods record, not used by the analysis).
+"src/nodes/gedai_node.py" = ["UP031"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
