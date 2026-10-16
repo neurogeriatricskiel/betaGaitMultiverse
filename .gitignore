@@ -1,27 +1,20 @@
-# Python
+# Python and tooling
 .venv/
 __pycache__/
 *.pyc
 *.pyo
+.pytest_cache/
+.ruff_cache/
+.claude/
 
-# Raw and processed data — too large for git
+# Data: raw and processed, per-subject QC jsons and plots (see README, Datasets)
 datasets/
 
-# Intermediate pipeline outputs — regenerable
-# (already covered by the blanket "datasets/" rule above; listed
-# explicitly per dataset for clarity)
-datasets/stepup/d02_prep/
-datasets/stepup/d03_clean/
-datasets/stepup/d04_gaitepochs/
-datasets/stepup/d05_ersp/
-datasets/stepup/d00_qc/
-datasets/jacobsen/d02_prep/
-datasets/jacobsen/d03_clean/
-datasets/jacobsen/d04_gaitepochs/
-datasets/jacobsen/d05_ersp/
-datasets/jacobsen/d00_qc/
+# Run logs
+logs/
+*.log
 
-# Large binary file types 
+# Large binary formats (never tracked anywhere)
 *.fif
 *.npy
 *.pkl
@@ -30,42 +23,15 @@ datasets/jacobsen/d00_qc/
 *.fdt
 *.mat
 
-# Multiverse intermediates — regenerable (nested per dataset, see
-# src.config.DIR_MULTIVERSE_COMET / DIR_MULTIVERSE_BRANCHES)
+# Multiverse: COMET state (universe scripts, combined pkl) and per-branch ICA caches.
+# Tracked: results/multiverse/<dataset>/outputs/ (per-subject table, zoom cache).
 results/multiverse/*/comet/
 results/multiverse/*/branches/
+# Earlier 40 Hz treadmill run, kept read-only; summarised in results/supplementary/.
+results/multiverse/stepup_40hz_archive/
 
-# COMET per-universe scripts — regenerable via --create
-# (universe_N.py files inside comet/ are already covered above)
-
-# Keep final outputs even if they match binary patterns above
-!results/multiverse/*/outputs/multiverse_results.pkl
-!results/multiverse/*/outputs/*.tsv
-!results/pipeline/*/qc/*.tsv
-
-# Legacy
-old scripts/
-initialanalysis.ipynb
-uv.lock
-possibleDatasets.xlsx
-
-# GEDAI -- evaluated, excluded from the multiverse (see README). Kept on
-# disk as a methods-validation record, untracked only; do NOT add
-# src/nodes/gedai_node.py here -- that one is tracked, in-repo pipeline
-# code cited directly by the README.
-results/pipeline/*/qc/gedai_gate_check.txt
-
-# One-off diagnostic scripts (local only) and their reports. QC scripts
-# whose numbers are reported (scripts/qc/) and their outputs in
-# results/pipeline/<dataset>/qc/ are tracked.
+# Local diagnostics (scripts/diag) and their outputs
 scripts/diag/
-results/pipeline/*/qc/band_diagnostics.txt
-results/pipeline/jacobsen/qc/baseline_120s_check.txt
-
-# Ad-hoc run logs and throwaway launcher batch files
-*.log
-logs/
-run_jacobsen2.bat
-
-# Claude Code local tooling config
-.claude/
+results/pipeline/*/qc/*_band_diagnostics.txt
+results/pipeline/*/qc/*_gedai_gate_check.txt
+results/pipeline/*/qc/*_baseline_120s_check.txt
