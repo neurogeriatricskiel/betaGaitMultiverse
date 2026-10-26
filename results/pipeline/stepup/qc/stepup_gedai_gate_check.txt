@@ -1,0 +1,11 @@
+GEDAI GATE CHECK (two-stage GEDAI node, current defaults)
+=======================================================
+subject      var_removed_%   cz_roi_beta_removed_%
+S1                   99.87                   96.61
+S9                   99.74                   98.71
+S14                  99.85                   93.70
+
+Mean total variance removed : +99.82%
+Mean Cz-ROI beta removed    : +96.34%
+Gate threshold              : <= 15% Cz-ROI beta removed
+Gate result                 : FAIL -- GEDAI NOT viable as multiverse node
