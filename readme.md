@@ -1,6 +1,6 @@
 # Multiverse analysis of beta activity during gait
 
-Does sensorimotor beta power (13-30 Hz) differ between double stance and
+Does beta power (13-30 Hz) differ between double stance and
 swing during walking, and does the answer survive defensible changes to EEG
 preprocessing? This repository computes the per-subject double-stance - swing
 beta contrast in two independent datasets (treadmill and overground walking)
@@ -10,7 +10,7 @@ with a fixed reference pipeline per dataset, and repeats it over the same
 
 Main results: treadmill t(16) = 5.13 (n = 17); overground primary cohort
 t(13) = 3.50 (n = 14 independent recordings); 27 / 27 universes p < 0.05 in
-each dataset (uncorrected).
+each dataset.
 
 ## Datasets
 
@@ -34,6 +34,7 @@ uv venv --python 3.13
 .venv\Scripts\activate          # Windows; macOS/Linux: source .venv/bin/activate
 uv pip install -e .             # runtime dependencies, exact versions (pyproject.toml)
 uv pip install -e ".[dev]"      # + pytest, ruff
+uv pip install -e ".[gedai]"    # + gedai, only for scripts/qc/qc_gedai_gate.py
 ```
 
 `uv.lock` records the full resolved environment. `docs/environment_used.txt`
@@ -74,6 +75,7 @@ python scripts/qc/qc_jacobsen_duplicate_audit.py                        # overgr
 python scripts/qc/qc_averaging_order.py [stepup]                        # default overground
 python scripts/qc/qc_log_averaging_bias.py
 python scripts/qc/qc_gpm_band_check.py
+python scripts/qc/qc_gedai_gate.py [all]                                # treadmill; needs the gedai extra
 BETAGAIT_DATASET=<key> python scripts/qc/qc_roi_channel_sensitivity.py  # + supplementary ROI table, topography
 BETAGAIT_DATASET=<key> python scripts/qc/qc_ica_audit.py
 BETAGAIT_DATASET=<key> python scripts/qc/qc_heelstrike_locked.py
@@ -91,27 +93,11 @@ the first run, seconds afterwards (cached panel arrays);
 10 min; everything else under a minute.
 
 **Determinism:** AutoReject and ICA use `RANDOM_STATE = 42`; gait-event
-anchors are frozen files. Rerunning stages 1-5 for one subject reproduces the
+anchors are frozen files (treadmill reference and both multiverses) or fixed
+values (overground reference, 18 / 50 / 68 %). Rerunning stages 1-5 for one subject reproduces the
 stored outputs bit for bit, and regenerating any figure from the stored data
 gives a byte-identical PNG. Intermediate `.fif` files are float32 (MNE
 default); see `docs/decisions.md`.
-
-## Stage map
-
-| Script | Stage |
-|---|---|
-| `prepana01_prep_gaitevents.py` | 1. Gait events (motion capture or events.tsv) to gait cycles; cycle tables |
-| `prepana02_raw2ica.py` | 2. Raw EEG to band-passed, (ASR-corrected,) average-referenced data; AutoReject; ICA fit |
-| `prepana03_ica2clean.py` | 3. ICLabel classification; ICA applied to the preprocessed data |
-| `prepana04_clean2gaitcycles.py` | 4. ICA-corrected data cut into gait-cycle segments; kept-cycle table |
-| `prepana05_gaitcycles2tfr.py` | 5. Per-cycle Morlet TFR, standing baseline, time warp; per-subject ERSP and ROI weights |
-| `prepana06_plotbetagait.py` | 6. Group ERSP figure (main text); `06b`: overground GPM supplement; `06c`: ROI-weight supplement |
-| `prepana07_betaphase_stats.py` | 7. Group double-stance vs swing paired t-test (reference statistic) |
-| `mulana01_create_multiverse.py` | M1. Write the 27 universe scripts (COMET) |
-| `mulana02_run_multiverse.py` | M2. Run every universe per subject (ICA per branch, cached) |
-| `mulana03_visualize_multiverse.py` | M3. Specification curve per dataset |
-| `mulana04_zoom_universes.py` | M4. Lowest / median / highest universe figure |
-| `mulana05_lowpass40_supplement.py` | M5. Treadmill 40 Hz vs 60 Hz low-pass multiverse (supplement table and curve) |
 
 ## Repository map
 
@@ -139,6 +125,172 @@ results/
 datasets/          raw and processed data (not tracked)
 logs/              run logs (not tracked)
 ```
+
+## How the scripts and data fit together
+
+`DATASET` stands for `stepup` (treadmill) or `jacobsen` (overground) in every
+path below.
+
+```mermaid
+flowchart TD
+    CFG["src/config.py, config_stepup.py,<br/>config_jacobsen.py: all parameters and paths"]:::cfg
+    DL["scripts/setup/00_download_openneuro_dataset.py<br/>overground only"]:::script
+    RAW[("datasets/DATASET/d00_raw<br/>BIDS EEG, events, electrodes, motion")]:::data
+    DL --> RAW
+    CFG -.-> REF
+    CFG -.-> MV
+
+    subgraph REF["Reference pipeline<br/>scripts/main_script_eegpipeline.py"]
+        P1["prepana01<br/>gait events"]:::events
+        D1[("d01_gaitevents<br/>events.tsv, cycles.tsv")]:::data
+        P2["prepana02<br/>preprocessing, AutoReject, ICA fit"]:::eeg
+        D2[("d02_prep<br/>concat_raw.fif, preica_clean_epo.fif, ica.fif")]:::data
+        P3["prepana03<br/>ICLabel, apply ICA"]:::eeg
+        D3[("d03_clean<br/>desc-icaClean_concat_raw.fif, clean-ica.fif")]:::data
+        P4["prepana04<br/>cut gait cycles"]:::analysis
+        D4[("d04_gaitepochs<br/>gait_segments.npy, cycles_kept.tsv")]:::data
+        P5["prepana05<br/>TFR, time warp, ERSP"]:::analysis
+        D5[("d05_ersp, d05_roi_topo<br/>ersp_beta, double_stance, swing,<br/>roi_weights .npy")]:::data
+        P6["prepana06<br/>group figure"]:::analysis
+        P7["prepana07<br/>group statistic"]:::analysis
+        P1 --> D1
+        P2 --> D2 --> P3 --> D3
+        D3 --> P4
+        D1 --> P4
+        P4 --> D4 --> P5 --> D5
+        D3 --> P5
+        D5 --> P6
+        D5 --> P7
+    end
+    RAW --> P1
+    RAW --> P2
+
+    FZ["scripts/freeze_gait_anchors.py<br/>run by hand"]:::analysis
+    ANCH[("d05_ersp<br/>group_gait_event_anchors_frozen.json")]:::data
+    D4 --> FZ --> ANCH
+    ANCH -.->|"treadmill only"| P5
+    CFG -.->|"overground: fixed 18 / 50 / 68 %"| P5
+
+    FIG1(["results/figures<br/>DATASET_betaersp_gait.png"]):::result
+    ST(["results/pipeline/DATASET/qc<br/>DATASET_betaphase_stats.txt"]):::result
+    P6 --> FIG1
+    P7 --> ST
+
+    subgraph MV["Multiverse<br/>scripts/main_script_multiverse.py"]
+        M1["mulana01<br/>create 27 universe scripts"]:::mv
+        C1[("comet/<br/>scripts/universe_*.py, multiverse_summary.csv,<br/>results/forking_paths.pkl")]:::data
+        M2["mulana02<br/>run 27 universes<br/>src/multiverse_pipeline.py"]:::mv
+        BR[("branches/, git-ignored<br/>ICA and preprocessed data<br/>per subject and branch")]:::data
+        RES[("comet/results<br/>multiverse_results.pkl")]:::data
+        M3["mulana03<br/>specification curve"]:::mv
+        M1 --> C1 --> M2
+        M2 --> BR
+        M2 --> RES
+        RES --> M3
+    end
+    RAW --> M2
+    D1 --> M2
+    ANCH -->|"both datasets"| M2
+
+    FIG2(["results/figures<br/>DATASET_speccurve.png"]):::result
+    M3 --> FIG2
+    M4["mulana04<br/>zoom: lowest, median, highest"]:::mv
+    ZA[("results/multiverse/DATASET/outputs<br/>DATASET_zoom_arrays.npz")]:::data
+    FIG3(["results/figures<br/>DATASET_multiverse_zoom.png"]):::result
+    RES --> M4
+    BR --> M4
+    ANCH --> M4
+    D1 --> M4
+    M4 --> ZA
+    M4 --> FIG3
+    M5["mulana05<br/>40 Hz low-pass supplement, treadmill"]:::mv
+    ARCH[("results/multiverse/stepup_40hz_archive<br/>git-ignored, local")]:::data
+    SUP2(["results/supplementary<br/>40 Hz table and specification curve"]):::result
+    RES --> M5
+    ARCH --> M5
+    M5 --> SUP2
+
+    QC0[("datasets/DATASET/d00_qc<br/>per-subject QC json")]:::data
+    QCB["scripts/qc/qc_build_tables.py"]:::qc
+    QCT(["results/pipeline/DATASET/qc<br/>subject QC, exclusions, cohorts,<br/>parameters, universes"]):::result
+    REF -->|"QC json per stage"| QC0
+    QC0 --> QCB --> QCT
+    RES --> QCB
+
+    QCX["scripts/qc/ checks<br/>applied settings, baseline window,<br/>duplicate audit, averaging order,<br/>bias simulation, GPM bands,<br/>ROI sensitivity, ICA audit,<br/>heel-strike average, GEDAI gate"]:::qc
+    QCXO(["results/pipeline/DATASET/qc<br/>results/supplementary<br/>reports, tables, figures"]):::result
+    RAW --> QCX
+    D3 --> QCX
+    D5 --> QCX
+    QCX --> QCXO
+
+    QCM["scripts/qc/ multiverse tables<br/>universe-by-subject contrasts,<br/>frontal diagnostic"]:::qc
+    QCMO(["results/multiverse/DATASET/outputs<br/>.tsv tables"]):::result
+    RES --> QCM
+    BR --> QCM
+    QCM --> QCMO
+
+    SUP["prepana06b, prepana06c<br/>GPM, ROI filter maps"]:::analysis
+    SUPO(["results/supplementary<br/>jacobsen_gpm_gait.png,<br/>DATASET_roi_filter_topo.png"]):::result
+    D5 --> SUP --> SUPO
+
+    classDef cfg fill:#f5f5f0,stroke:#5B7C8D,color:#1B2A33
+    classDef script fill:#ffffff,stroke:#5B7C8D,color:#1B2A33
+    classDef events fill:#6B4C8A,stroke:#4a3560,color:#ffffff
+    classDef eeg fill:#0E5A6B,stroke:#093d49,color:#ffffff
+    classDef analysis fill:#27478C,stroke:#1a3163,color:#ffffff
+    classDef mv fill:#F2A541,stroke:#b87a1f,color:#1B2A33
+    classDef qc fill:#5B7C8D,stroke:#3f5866,color:#ffffff
+    classDef data fill:#EAF3F5,stroke:#8FB8C4,color:#1B2A33
+    classDef result fill:#E3F1E7,stroke:#3a8a5a,color:#1B2A33
+```
+
+Rectangles are scripts, cylinders are data on disk, rounded boxes are results
+used in the manuscript. Colours: plum is gait events, teal is EEG
+preprocessing, navy is gait-cycle analysis, amber is the multiverse, grey is QC
+and configuration. File names in the boxes omit the `sub-<ID>_` prefix.
+
+### Reference pipeline
+
+| # | Script | Reads | Writes | Folder |
+|---|---|---|---|---|
+| 1 | `prepana01_prep_gaitevents.py` | Raw gait events: motion capture (treadmill), `events.tsv` (overground) | `events.tsv`, `cycles.tsv` (one row per stride: RHS, LTO, LHS, RTO); gait QC plots (treadmill); `gait_events_qc.json` | `datasets/DATASET/d01_gaitevents`, `d00_qc` |
+| 2 | `prepana02_raw2ica.py` | `d00_raw` | `concat_raw.fif` (standing and walking, filtered, bad channels interpolated, ASR as configured, average reference), `preica_clean_epo.fif` (AutoReject epochs), `ica.fif`, montage and IC plots; `preprocessing_qc.json` | `d02_prep`, `d00_qc` |
+| 3 | `prepana03_ica2clean.py` | `d02_prep` | Preprocessed data after ICLabel selection and ICA (`desc-icaClean_concat_raw.fif`), `clean-ica.fif`; `ica_qc.json` | `d03_clean`, `d00_qc` |
+| 4 | `prepana04_clean2gaitcycles.py` | `d03_clean`, `d01_gaitevents/cycles.tsv` | Gait-cycle segments RHS to RHS (`gait_segments.npy`, `gait_sfreq.npy`), `cycles_kept.tsv`; `gait_epochs_qc.json` | `d04_gaitepochs`, `d00_qc` |
+| 5 | `prepana05_gaitcycles2tfr.py` | `d04_gaitepochs`, standing segment from `d03_clean`, warp anchors (treadmill: frozen file; overground: fixed 18 / 50 / 68 % from the configuration) | `ersp_beta.npy`, `ersp_double_stance.npy`, `ersp_swing.npy`, `roi_weights.npy`; ROI weight plot; `ersp_qc.json` | `d05_ersp`, `d05_roi_topo`, `d00_qc` |
+| 6 | `prepana06_plotbetagait.py` | `d05_ersp`, `d04_gaitepochs/cycles_kept.tsv`, `d03_clean` (channel positions); overground primary cohort | `DATASET_betaersp_gait.png` | `results/figures` |
+| 7 | `prepana07_betaphase_stats.py` | `d05_ersp` (double stance, swing, ROI weights) | `DATASET_betaphase_stats.txt` | `results/pipeline/DATASET/qc` |
+| by hand | `freeze_gait_anchors.py` | `d04_gaitepochs/cycles_kept.tsv` | `group_gait_event_anchors_frozen.json` | `d05_ersp` |
+| - | `main_script_eegpipeline.py` | - | Runs 1 to 7 in order; finished subjects are skipped on rerun | - |
+| setup | `setup/00_download_openneuro_dataset.py` | OpenNeuro ds003039 (network) | Overground raw data (BIDS) | `datasets/jacobsen/d00_raw` |
+
+### Multiverse
+
+| # | Script | Reads | Writes | Folder |
+|---|---|---|---|---|
+| 1 | `mulana01_create_multiverse.py` | Grid and cohorts in `src/config.py` | 27 `universe_*.py`, `multiverse_summary.csv`, `forking_paths.pkl` | `results/multiverse/DATASET/comet/scripts`, `comet`, `comet/results` |
+| 2 | `mulana02_run_multiverse.py` | Universe scripts, `d00_raw`, `d01_gaitevents/cycles.tsv`, frozen anchors (both datasets) | ICA and preprocessed data per subject and branch; `multiverse_results.pkl` | `results/multiverse/DATASET/branches` (git-ignored), `comet/results` |
+| 3 | `mulana03_visualize_multiverse.py` | `multiverse_results.pkl` | `DATASET_speccurve.png` | `results/figures` |
+| 4 | `mulana04_zoom_universes.py` | `multiverse_results.pkl`, branch data, `cycles.tsv`, frozen anchors (both datasets) | `DATASET_multiverse_zoom.png`, `DATASET_zoom_arrays.npz` (replots in seconds) | `results/figures`, `results/multiverse/DATASET/outputs` |
+| 5 | `mulana05_lowpass40_supplement.py` | Treadmill `multiverse_results.pkl` (60 Hz) and the 40 Hz archive | `stepup_multiverse_lowpass40_vs_60.tsv`, `stepup_speccurve_lowpass40.png` | `results/supplementary` |
+| - | `main_script_multiverse.py` | - | Runs mulana01 to mulana03 in order | - |
+
+### QC and supplement
+
+| Script | Question it answers | Output |
+|---|---|---|
+| `qc/qc_build_tables.py` | Who was included, excluded and why? | Subject QC, exclusions, cohorts, parameters used, per-universe statistics, QC flags (`results/pipeline/DATASET/qc`) |
+| `qc/qc_applied_settings.py` | Do the saved data match the configuration? | `DATASET_applied_settings.tsv` |
+| `qc/qc_baseline_window.py` | How long are the standing and walking segments, and which baseline was used? | `DATASET_baseline_window.tsv` |
+| `qc/qc_jacobsen_duplicate_audit.py` | Which overground recordings are duplicates? | `jacobsen_dataquality_audit.txt`, `jacobsen_duplicate_recordings.txt` |
+| `qc/qc_averaging_order.py`, `qc/qc_log_averaging_bias.py` | Does the absolute ERSP level depend on the averaging order? | `DATASET_ersp_averaging_order.txt`, overground GPM comparison, simulation report |
+| `qc/qc_gpm_band_check.py` | Is the overground GPM effect in all beta sub-bands? | `jacobsen_gpm_band_check.txt` |
+| `qc/qc_roi_channel_sensitivity.py` | Does the contrast depend on the ROI or on frontal channels? | Report, per-channel table and frequency profile (`results/pipeline/DATASET/qc`); `DATASET_roi_sensitivity.tsv`, `DATASET_contrast_topography.png` (`results/supplementary`) |
+| `qc/qc_ica_audit.py`, `qc/qc_heelstrike_locked.py` | What did ICA keep at Fpz, and what is locked to heel strike? | `DATASET_ica_audit.txt`, `DATASET_heelstrike_locked.txt`, `.png` |
+| `qc/qc_universe_subject_contrasts.py`, `qc/qc_multiverse_frontal.py` | Can the specification curve be recomputed per subject, and does the contrast track frontal activity? | `DATASET_universe_subject_contrasts.tsv`, `DATASET_multiverse_frontal.tsv` (`results/multiverse/DATASET/outputs`), `DATASET_multiverse_frontal.txt` |
+| `qc/qc_gedai_gate.py` | Why was GEDAI not used as a node? | `stepup_gedai_gate_check.txt`, `stepup_gedai_gate.tsv` |
+| `prepana06b_plot_gpm_supplement.py`, `prepana06c_plot_roi_filter_supplement.py` | Supplementary figures | `jacobsen_gpm_gait.png`, `DATASET_roi_filter_topo.png` (`results/supplementary`) |
 
 ## Modules in src/
 
@@ -206,9 +358,9 @@ Ruff rules E, F, I, B, UP, N and D (numpy docstrings) are enabled.
 - Bad channels interpolated per subject are printed but not stored.
 - Two treadmill exclusion checks (S21, S2) were run with scripts that were not
   preserved; their outputs are kept and cited in `stepup_exclusions.tsv`.
-- GEDAI was evaluated as a candidate node and excluded (`docs/decisions.md`).
-  Its evidence (`stepup_gedai_gate_check.txt` and `scripts/diag/`) is kept
-  locally and is not part of the repository.
+- GEDAI was evaluated as a candidate node and excluded (`docs/decisions.md`);
+  gate check: `results/pipeline/stepup/qc/stepup_gedai_gate_check.txt` and
+  `stepup_gedai_gate.tsv` (`scripts/qc/qc_gedai_gate.py`).
 
 ## Open items
 
