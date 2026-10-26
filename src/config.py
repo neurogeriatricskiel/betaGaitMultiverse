@@ -179,6 +179,29 @@ OPTION_LABELS = {
 # from results/pipeline/jacobsen/qc/jacobsen_duplicate_recordings.txt by
 # src.qc.load_primary_cohort.
 
+# GEDAI, evaluated as a candidate node and excluded (scripts/qc/qc_gedai_gate.py).
+# Gate: GEDAI is viable only if it removes at most GEDAI_GATE_THRESHOLD_PCT of
+# the linear Cz-ROI 13-30 Hz power (Welch PSD of the whole STAND + CS recording,
+# mean over GEDAI_GATE_SUBJECTS). The 15 % criterion is ours, set before the
+# check; it is not taken from the literature.
+GEDAI_GATE_THRESHOLD_PCT = 15.0
+GEDAI_GATE_SUBJECTS = ("S1", "S9", "S14")  # treadmill
+# Settings passed to src.nodes.gedai_node.apply_gedai_node. The broadband
+# multiplier is the value src.pipeline_steps.preprocess_raw passes
+# (gedai_noise_multiplier = 3.0); the node's own default is 6.0, run as a
+# sensitivity check (GEDAI_SENSITIVITY_BROADBAND_MULTIPLIER).
+GEDAI_SETTINGS = {
+    "duration": 2.0,
+    "overlap": 0.5,
+    "broadband_noise_multiplier": 3.0,
+    "spectral_noise_multiplier": 3.0,
+    "wavelet_type": "haar",
+    "wavelet_level": 5,
+    "wavelet_low_cutoff": 2.0,
+    "sensai_method": "optimize",
+}
+GEDAI_SENSITIVITY_BROADBAND_MULTIPLIER = 6.0
+
 # =====================================================================
 # 11. Statistics                                                 [M2.8]
 # =====================================================================
