@@ -33,5 +33,4 @@ results/multiverse/stepup_40hz_archive/
 # Local diagnostics (scripts/diag) and their outputs
 scripts/diag/
 results/pipeline/*/qc/*_band_diagnostics.txt
-results/pipeline/*/qc/*_gedai_gate_check.txt
 results/pipeline/*/qc/*_baseline_120s_check.txt
