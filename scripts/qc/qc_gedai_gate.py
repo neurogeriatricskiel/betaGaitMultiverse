@@ -20,10 +20,18 @@ Purpose
     and walking without its first JOIN_TRIM_S, each with Welch average
     "mean" and "median"; and the same from separate GEDAI fits on the
     standing and the walking recording alone (fit = "separate").
-    Gate (src.config.GEDAI_GATE_THRESHOLD_PCT, our criterion): mean ROI beta
-    removed over GEDAI_GATE_SUBJECTS, whole recording, configured settings.
-    Sensitivity: the node's own broadband multiplier
-    (GEDAI_SENSITIVITY_BROADBAND_MULTIPLIER).
+    Each row has a role:
+      primary     -- the gating measure: walking without its first
+                     JOIN_TRIM_S, Welch average "median", GEDAI fitted on the
+                     whole recording, broadband multiplier 3;
+      sensitivity -- every other join-free or separate-fit row (separate fit,
+                     multiplier GEDAI_SENSITIVITY_BROADBAND_MULTIPLIER, mean
+                     Welch, standing without its last JOIN_TRIM_S); not gating;
+      superseded  -- the original whole / walking / standing rows (mean Welch,
+                     whole-recording fit), kept for traceability; the
+                     whole-recording figure is inflated by the join transient.
+    Gate (src.config.GEDAI_GATE_THRESHOLD_PCT, our criterion): mean of the
+    primary measure over GEDAI_GATE_SUBJECTS.
 Inputs
     datasets/stepup/d00_raw/ (BrainVision STAND + CS)
 Outputs
@@ -60,6 +68,18 @@ SEGMENTS = ("whole", "walking", "standing")
 JOIN_FREE = ("standing_trim", "walking_trim")
 ANNOTATION = {"walking": "CS", "standing": "STAND"}
 JOIN_TRIM_S = 20.0  # s -- removed next to the join in the join-free rows
+PRIMARY = {"segment": "walking_trim", "fit": "whole", "welch_average": "median"}
+# (label, selection among sensitivity rows, compared with the limit); multiplier 3 unless set
+SENSITIVITY = (
+    ("separate fit", {"segment": "walking_trim", "fit": "separate", "welch_average": "median"},
+     True),
+    ("multiplier 6", {"segment": "walking_trim", "fit": "whole", "welch_average": "median",
+                      "broadband_multiplier": config.GEDAI_SENSITIVITY_BROADBAND_MULTIPLIER},
+     True),
+    ("mean Welch", {"segment": "walking_trim", "fit": "whole", "welch_average": "mean"}, True),
+    ("standing without last 20 s", {"segment": "standing_trim", "fit": "whole",
+                                    "welch_average": "median"}, False),
+)  # fmt: skip
 
 
 def check_settings() -> None:
@@ -135,11 +155,10 @@ def subject_rows(subject: str, raw_dir) -> list[dict]:
         for name in SEGMENTS:
             stats = removed(segment(before, name), segment(after, name))
             rows.append(row(subject, mult, name, "whole", "mean") | stats)
-        if mult == config.GEDAI_SETTINGS["broadband_noise_multiplier"]:
-            for name in JOIN_FREE:
-                for avg in ("mean", "median"):
-                    stats = removed(segment(before, name), segment(after, name), avg)
-                    rows.append(row(subject, mult, name, "whole", avg) | stats)
+        for name in JOIN_FREE:
+            for avg in ("mean", "median"):
+                stats = removed(segment(before, name), segment(after, name), avg)
+                rows.append(row(subject, mult, name, "whole", avg) | stats)
     del before, after
     mult = config.GEDAI_SETTINGS["broadband_noise_multiplier"]
     for seg_name, desc in ANNOTATION.items():
@@ -154,18 +173,85 @@ def subject_rows(subject: str, raw_dir) -> list[dict]:
     return rows
 
 
+def assign_role(table: pd.DataFrame) -> pd.Series:
+    """Return primary / sensitivity / superseded for every row (see the module docstring)."""
+    base = config.GEDAI_SETTINGS["broadband_noise_multiplier"]
+    primary = (
+        (table.segment == PRIMARY["segment"]) & (table.fit == PRIMARY["fit"])
+        & (table.welch_average == PRIMARY["welch_average"])
+        & (table.broadband_multiplier == base)
+    )  # fmt: skip
+    superseded = (
+        table.segment.isin(SEGMENTS) & (table.fit == "whole") & (table.welch_average == "mean")
+    )
+    return pd.Series(
+        np.select([primary, superseded], ["primary", "superseded"], "sensitivity"),
+        index=table.index,
+    )
+
+
+def gate_value(table: pd.DataFrame, gate_subjects: list[str]) -> float:
+    """Return the gate value: mean primary ROI beta removed (%) over the gate subjects."""
+    rows = table[(table.role == "primary") & table.subject.isin(gate_subjects)]
+    if rows.subject.nunique() != len(gate_subjects) or len(rows) != len(gate_subjects):
+        raise ValueError("gate needs exactly one primary row per gate subject")
+    return float(rows.roi_beta_removed_pct.mean())
+
+
+def measure_line(label: str, g: pd.DataFrame) -> str:
+    """Per-subject ROI beta removed, mean and range of one measure."""
+    beta = g.roi_beta_removed_pct
+    per = ", ".join(f"{s} {v:.2f}" for s, v in zip(g.subject, beta, strict=True))
+    return f"  {label}: {per}; mean {beta.mean():.2f} % (range {beta.min():.2f}-{beta.max():.2f})"
+
+
 def report(table: pd.DataFrame, gate_subjects: list[str], minutes: float) -> list[str]:
-    """Header with provenance and settings, the per-subject table and the gate result."""
+    """Return primary and sensitivity results, then provenance, the full table, superseded rows."""
     node = hashlib.sha256(open(gedai_node.__file__, "rb").read()).hexdigest()
     base = config.GEDAI_SETTINGS["broadband_noise_multiplier"]
-    gate = table[(table.segment == "whole") & (table.broadband_multiplier == base)
-                 & (table.fit == "whole") & (table.welch_average == "mean")
-                 & table.subject.isin(gate_subjects)]["roi_beta_removed_pct"].mean()  # fmt: skip
+    limit = config.GEDAI_GATE_THRESHOLD_PCT
+    gate = gate_value(table, gate_subjects)
+    ok = gate <= limit
+    on = table[table.subject.isin(gate_subjects)]
     show = table.drop(columns=["roi_beta_before", "roi_beta_after", "duration_s"])
-    ok = gate <= config.GEDAI_GATE_THRESHOLD_PCT
     lines = [
         "GEDAI GATE CHECK (treadmill)",
         "=" * 55,
+        f"Primary (gating): % Cz-ROI 13-30 Hz power removed, walking without its first "
+        f"{JOIN_TRIM_S:g} s, Welch average median, GEDAI fitted on the whole recording, "
+        f"broadband multiplier {base:g}; mean over {', '.join(gate_subjects)}; limit {limit:g} % "
+        "(our criterion, not from the literature)",
+        measure_line("primary", on[on.role == "primary"]),
+        f"Gate value {gate:.2f} % -> {'PASS' if ok else 'FAIL'}: GEDAI "
+        f"{'viable' if ok else 'NOT viable'} as a multiverse node",
+        "",
+        "Sensitivity (not gating):",
+    ]
+    differ = []
+    for label, sel, decides in SENSITIVITY:
+        sel = sel | {"broadband_multiplier": sel.get("broadband_multiplier", base)}
+        g = on[(on.role == "sensitivity") & np.logical_and.reduce(
+            [on[k] == v for k, v in sel.items()]
+        )]  # fmt: skip
+        if decides and (g.roi_beta_removed_pct.mean() <= limit) != ok:
+            differ.append(label)
+        lines.append(measure_line(label, g))
+    lines += [
+        "",
+        "The primary measure was defined after a join transient inflated the original "
+        "whole-recording figure (see stepup_join_transient.txt); "
+        + (
+            "the sensitivity analysis gives the same decision."
+            if not differ
+            else "the sensitivity analysis does NOT give the same decision for: "
+            + ", ".join(differ)
+            + "."
+        ),
+        "(Decision compared for the walking sensitivity measures; standing without its last "
+        f"{JOIN_TRIM_S:g} s shows removal at rest and is not compared with the limit.)",
+        "",
+    ]
+    lines += [
         f"gedai package {importlib.metadata.version('gedai')}; "
         f"src/nodes/gedai_node.py sha256 {node}",
         f"Settings: {config.GEDAI_SETTINGS}; sensitivity broadband multiplier "
@@ -178,27 +264,23 @@ def report(table: pd.DataFrame, gate_subjects: list[str], minutes: float) -> lis
         "13-30 Hz; fit = GEDAI on the whole recording or on each segment alone; *_trim = "
         f"without {JOIN_TRIM_S:g} s at the join; absolute ROI beta before / after (V^2/Hz) "
         "in stepup_gedai_gate.tsv",
+        "Superseded rows (role = superseded): the original whole / walking / standing rows, "
+        "mean Welch; the whole-recording figure is inflated by the join transient and is not "
+        "a result",
         f"Subjects: {', '.join(table.subject.unique())}  ({minutes:.0f} min)",
         "",
         show.to_string(index=False, float_format=lambda v: f"{v:.2f}"),
         "",
     ]
-    keys = ["segment", "broadband_multiplier", "fit", "welch_average"]
-    for (seg, mult, fit, avg), g in table.groupby(keys, sort=False):
+    keys = ["role", "segment", "broadband_multiplier", "fit", "welch_average"]
+    for (role, seg, mult, fit, avg), g in table.groupby(keys, sort=False):
         beta = g.roi_beta_removed_pct
         lines.append(
-            f"Mean {seg:<13} multiplier {mult:g} fit {fit:<8} {avg:<6}: variance pooled "
-            f"{g.var_removed_pooled_pct.mean():.2f} %, "
+            f"Mean [{role}] {seg:<13} multiplier {mult:g} fit {fit:<8} {avg:<6}: variance "
+            f"pooled {g.var_removed_pooled_pct.mean():.2f} %, "
             f"per channel {g.var_removed_channel_mean_pct.mean():.2f} %, ROI beta "
             f"{beta.mean():.2f} % (range {beta.min():.2f}-{beta.max():.2f}, n = {len(g)})"
         )
-    lines += [
-        "",
-        f"Gate (ours, not from the literature): mean ROI beta removed, whole recording, multiplier "
-        f"{base:g}, {', '.join(gate_subjects)} <= {config.GEDAI_GATE_THRESHOLD_PCT:g} %",
-        f"Gate value {gate:.2f} % -> {'PASS' if ok else 'FAIL'}: GEDAI "
-        f"{'viable' if ok else 'NOT viable'} as a multiverse node",
-    ]
     return lines
 
 
@@ -213,8 +295,9 @@ def main() -> None:
         rows += subject_rows(s, dirs["raw"])
         print(f"sub-{s} done ({(time.time() - t0) / 60:.1f} min)", flush=True)
     table = pd.DataFrame(rows)
+    table.insert(1, "role", assign_role(table))
     table.to_csv(config.DIR_QC / "stepup_gedai_gate.tsv", sep="\t", index=False,
-                 float_format="%.6g", lineterminator="\n")  # fmt: skip
+                 float_format="%.10g", lineterminator="\n")  # fmt: skip
     lines = report(table, gate_subjects, (time.time() - t0) / 60)
     (config.DIR_QC / "stepup_gedai_gate_check.txt").write_text("\n".join(lines) + "\n")
     print("\n".join(lines))

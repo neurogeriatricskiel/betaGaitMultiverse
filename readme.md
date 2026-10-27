@@ -360,9 +360,14 @@ Ruff rules E, F, I, B, UP, N and D (numpy docstrings) are enabled.
 - Bad channels interpolated per subject are printed but not stored.
 - Two treadmill exclusion checks (S21, S2) were run with scripts that were not
   preserved; their outputs are kept and cited in `stepup_exclusions.tsv`.
-- GEDAI was evaluated as a candidate node and excluded (`docs/decisions.md`);
-  gate check: `results/pipeline/stepup/qc/stepup_gedai_gate_check.txt` and
-  `stepup_gedai_gate.tsv` (`scripts/qc/qc_gedai_gate.py`).
+- GEDAI was evaluated on three treadmill participants and not included
+  (`docs/decisions.md`). The first gate figure (96.3 %, mean Welch over the
+  whole recording) is superseded because a join transient inflated it;
+  corrected values (join-free segments, median Welch, whole and separate
+  fits) are in `results/pipeline/stepup/qc/stepup_gedai_gate.tsv`
+  (`scripts/qc/qc_gedai_gate.py`): [TO FILL after S14]. The 15 % limit is
+  our own criterion; a beta reduction does not separate artifact from neural
+  activity.
 
 ## Open items
 

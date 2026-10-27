@@ -181,9 +181,10 @@ OPTION_LABELS = {
 
 # GEDAI, evaluated as a candidate node and excluded (scripts/qc/qc_gedai_gate.py).
 # Gate: GEDAI is viable only if it removes at most GEDAI_GATE_THRESHOLD_PCT of
-# the linear Cz-ROI 13-30 Hz power (Welch PSD of the whole STAND + CS recording,
-# mean over GEDAI_GATE_SUBJECTS). The 15 % criterion is ours, set before the
-# check; it is not taken from the literature.
+# the linear Cz-ROI 13-30 Hz power in the primary measure: walking segment
+# without its first 20 s, Welch average "median", GEDAI fitted on the whole
+# STAND + CS recording, broadband multiplier 3, mean over GEDAI_GATE_SUBJECTS.
+# The 15 % limit is our own criterion; it is not taken from the literature.
 GEDAI_GATE_THRESHOLD_PCT = 15.0
 GEDAI_GATE_SUBJECTS = ("S1", "S9", "S14")  # treadmill
 # Settings passed to src.nodes.gedai_node.apply_gedai_node. The broadband

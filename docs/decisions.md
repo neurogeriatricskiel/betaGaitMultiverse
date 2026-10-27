@@ -177,12 +177,19 @@ Source of truth: `results/pipeline/jacobsen/qc/jacobsen_duplicate_recordings.txt
   with a 40 Hz low-pass. It is kept read-only and reported as a sensitivity
   table and specification curve (`results/supplementary/stepup_*lowpass40*`);
   n = 15 in 26 universes and 14 in one.
-- **GEDAI excluded:** evaluated as a candidate node, it removed about 96 % of
-  Cz-ROI beta power (treadmill S1, S9, S14), far above the 15 % gate; kept
-  only as a documented methods check (`src/nodes/gedai_node.py`). The
-  evidence (`stepup_gedai_gate_check.txt` and its script
-  `scripts/diag/diag_gedai_check.py`) is kept locally and is not part of the
-  repository (git-ignored); it is available from the authors on request.
+- **GEDAI not included:** evaluated as a candidate node on three treadmill
+  participants (S1, S9, S14) and not included. The first gate figure (96.3 %
+  of Cz-ROI 13-30 Hz power removed, mean Welch over the whole recording) is
+  superseded: a filter transient at the STAND/CS join inflated the
+  whole-recording "before" power (14x in S1, 49x in S9;
+  `scripts/qc/qc_join_transient.py`). Corrected values are in
+  `results/pipeline/stepup/qc/stepup_gedai_gate.tsv` (segments without
+  20 s at the join, median Welch, GEDAI fitted on the whole recording and
+  on each segment alone): [TO FILL after S14]. The 15 % limit is our own
+  criterion, not taken from the literature. A reduction in beta power does
+  not by itself separate artifact from neural activity. Kept only as a
+  documented methods check (`src/nodes/gedai_node.py`,
+  `scripts/qc/qc_gedai_gate.py`, `stepup_gedai_gate_check.txt`).
 
 ## Storage, determinism and reproducibility
 

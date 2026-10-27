@@ -65,7 +65,7 @@
 **Verdict: EXCLUDE from the multiverse; report only as a methods-validation sub-study.**
 
 - **Corpus support:** 0/65 papers in this gait corpus use GEDAI — there is no adoption precedent to justify treating it as a forking path the field actually takes.
-- **Empirical failure on this dataset:** in preliminary testing, GEDAI produced a leadfield/10-05 montage mismatch and removed an implausibly large fraction of signal variance (~97% overall, including 25–95% of Cz-ROI beta power, with a fitted threshold of 0.000 in all bands) — a clear sign of pathological rather than selective artifact rejection on this montage/dataset combination.
+- **Empirical result on this dataset:** the preliminary figure (~97 % of variance and 25-95 % of Cz-ROI beta power removed) is superseded; it came from an earlier test and is not a result. The current gate check (walking without its first 20 s, median Welch, our 15 % limit) is in `results/pipeline/stepup/qc/stepup_gedai_gate_check.txt` and `stepup_gedai_gate.tsv` (`scripts/qc/qc_gedai_gate.py`); see also `docs/decisions.md`.
 - **Why exclude rather than "include as a level that performs badly":** a multiverse node is meant to represent a genuine, defensible choice a careful analyst might make; a method with zero precedent in the target literature and a demonstrated catastrophic failure mode on the actual data does not meet that bar. Reporting it as a cautionary methods-validation note (rather than silently omitting it, or including it as if it were a legitimate arm) preserves the transparency value of having tried it without distorting the main multiverse's interpretability.
 
 ---
