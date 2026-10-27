@@ -1,11 +1,37 @@
-GEDAI GATE CHECK (two-stage GEDAI node, current defaults)
+GEDAI GATE CHECK (treadmill)
 =======================================================
-subject      var_removed_%   cz_roi_beta_removed_%
-S1                   99.87                   96.61
-S9                   99.74                   98.71
-S14                  99.85                   93.70
+gedai package 0.1.0; src/nodes/gedai_node.py sha256 cab3fe598c3374f2491167742583795954a90c2bf0bfb03094be75162886f106
+Settings: {'duration': 2.0, 'overlap': 0.5, 'broadband_noise_multiplier': 3.0, 'spectral_noise_multiplier': 3.0, 'wavelet_type': 'haar', 'wavelet_level': 5, 'wavelet_low_cutoff': 2.0, 'sensai_method': 'optimize'}; sensitivity broadband multiplier 6
+Filters (treadmill reference): high-pass 1 Hz, low-pass 60 Hz, ASR off; GEDAI before the average reference
+Metrics: % removed = 100 * (1 - after / before); variance pooled over channels and samples, and mean of per-channel fractions; ROI beta = linear Cz ROI of the Welch PSD, 13-30 Hz
+Subjects: S1, S9, S14  (120 min)
 
-Mean total variance removed : +99.82%
-Mean Cz-ROI beta removed    : +96.34%
-Gate threshold              : <= 15% Cz-ROI beta removed
-Gate result                 : FAIL -- GEDAI NOT viable as multiverse node
+subject  broadband_multiplier  segment  var_removed_pooled_pct  var_removed_channel_mean_pct  roi_beta_removed_pct
+     S1                  3.00    whole                   99.87                         97.44                 96.61
+     S1                  3.00  walking                   83.85                         70.87                 62.05
+     S1                  3.00 standing                   99.96                         97.53                 12.26
+     S1                  6.00    whole                   99.87                         97.52                 96.58
+     S1                  6.00  walking                   84.81                         72.70                 61.55
+     S1                  6.00 standing                   99.96                         97.53                 11.78
+     S9                  3.00    whole                   99.74                         98.10                 98.71
+     S9                  3.00  walking                   91.35                         82.62                 38.93
+     S9                  3.00 standing                   99.94                         98.82                 21.33
+     S9                  6.00    whole                   99.74                         98.10                 98.71
+     S9                  6.00  walking                   91.35                         82.62                 38.93
+     S9                  6.00 standing                   99.94                         98.82                 21.33
+    S14                  3.00    whole                   99.85                         98.22                 93.70
+    S14                  3.00  walking                   95.39                         87.50                 80.76
+    S14                  3.00 standing                   99.94                         96.94                 73.39
+    S14                  6.00    whole                   99.85                         98.22                 93.69
+    S14                  6.00  walking                   95.39                         87.50                 80.75
+    S14                  6.00 standing                   99.94                         96.93                 73.33
+
+Mean whole    multiplier 3: variance pooled 99.82 %, per channel 97.92 %, ROI beta 96.34 %  (n = 3)
+Mean walking  multiplier 3: variance pooled 90.20 %, per channel 80.33 %, ROI beta 60.58 %  (n = 3)
+Mean standing multiplier 3: variance pooled 99.95 %, per channel 97.76 %, ROI beta 35.66 %  (n = 3)
+Mean whole    multiplier 6: variance pooled 99.82 %, per channel 97.95 %, ROI beta 96.33 %  (n = 3)
+Mean walking  multiplier 6: variance pooled 90.52 %, per channel 80.94 %, ROI beta 60.41 %  (n = 3)
+Mean standing multiplier 6: variance pooled 99.95 %, per channel 97.76 %, ROI beta 35.48 %  (n = 3)
+
+Gate (ours, not from the literature): mean ROI beta removed, whole recording, multiplier 3, S1, S9, S14 <= 15 %
+Gate value 96.34 % -> FAIL: GEDAI NOT viable as a multiverse node

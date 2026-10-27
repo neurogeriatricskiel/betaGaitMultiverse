@@ -26,7 +26,7 @@ Manuscript
     Methods 2.7 (GEDAI exclusion).
 Run
     python scripts/qc/qc_gedai_gate.py [all]   (needs the gedai extra; "all" = every
-    reference subject instead of GEDAI_GATE_SUBJECTS; about 5 min per subject)
+    reference subject instead of GEDAI_GATE_SUBJECTS; about 40 min per subject)
 """
 
 import hashlib
