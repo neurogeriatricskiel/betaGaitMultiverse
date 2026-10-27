@@ -76,6 +76,7 @@ python scripts/qc/qc_averaging_order.py [stepup]                        # defaul
 python scripts/qc/qc_log_averaging_bias.py
 python scripts/qc/qc_gpm_band_check.py
 python scripts/qc/qc_gedai_gate.py [all]                                # treadmill; needs the gedai extra
+python scripts/qc/qc_join_transient.py                                  # treadmill
 BETAGAIT_DATASET=<key> python scripts/qc/qc_roi_channel_sensitivity.py  # + supplementary ROI table, topography
 BETAGAIT_DATASET=<key> python scripts/qc/qc_ica_audit.py
 BETAGAIT_DATASET=<key> python scripts/qc/qc_heelstrike_locked.py
@@ -217,7 +218,7 @@ flowchart TD
     QC0 --> QCB --> QCT
     RES --> QCB
 
-    QCX["scripts/qc/ checks<br/>applied settings, baseline window,<br/>duplicate audit, averaging order,<br/>bias simulation, GPM bands,<br/>ROI sensitivity, ICA audit,<br/>heel-strike average, GEDAI gate"]:::qc
+    QCX["scripts/qc/ checks<br/>applied settings, baseline window,<br/>duplicate audit, averaging order,<br/>bias simulation, GPM bands,<br/>ROI sensitivity, ICA audit,<br/>heel-strike average, GEDAI gate,<br/>STAND/CS join"]:::qc
     QCXO(["results/pipeline/DATASET/qc<br/>results/supplementary<br/>reports, tables, figures"]):::result
     RAW --> QCX
     D3 --> QCX
@@ -290,6 +291,7 @@ and configuration. File names in the boxes omit the `sub-<ID>_` prefix.
 | `qc/qc_ica_audit.py`, `qc/qc_heelstrike_locked.py` | What did ICA keep at Fpz, and what is locked to heel strike? | `DATASET_ica_audit.txt`, `DATASET_heelstrike_locked.txt`, `.png` |
 | `qc/qc_universe_subject_contrasts.py`, `qc/qc_multiverse_frontal.py` | Can the specification curve be recomputed per subject, and does the contrast track frontal activity? | `DATASET_universe_subject_contrasts.tsv`, `DATASET_multiverse_frontal.tsv` (`results/multiverse/DATASET/outputs`), `DATASET_multiverse_frontal.txt` |
 | `qc/qc_gedai_gate.py` | Why was GEDAI not used as a node? | `stepup_gedai_gate_check.txt`, `stepup_gedai_gate.tsv` |
+| `qc/qc_join_transient.py` | Does the filter transient at the treadmill STAND/CS join affect the result? | `stepup_join_transient.txt`, `stepup_join_transient.tsv` |
 | `prepana06b_plot_gpm_supplement.py`, `prepana06c_plot_roi_filter_supplement.py` | Supplementary figures | `jacobsen_gpm_gait.png`, `DATASET_roi_filter_topo.png` (`results/supplementary`) |
 
 ## Modules in src/

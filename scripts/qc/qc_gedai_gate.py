@@ -13,7 +13,13 @@ Purpose
       - total variance: pooled over channels and samples, and the mean of
         the per-channel fractions;
       - Cz-ROI beta power: Welch PSD (MNE defaults), 13-30 Hz, reduced with
-        the linear Cz ROI, 1 - after / before.
+        the linear Cz ROI, 1 - after / before; absolute power before and after
+        (V^2/Hz) is kept in the TSV.
+    Join-free rows (the STAND/CS join carries a filter transient,
+    scripts/qc/qc_join_transient.py): standing without its last JOIN_TRIM_S
+    and walking without its first JOIN_TRIM_S, each with Welch average
+    "mean" and "median"; and the same from separate GEDAI fits on the
+    standing and the walking recording alone (fit = "separate").
     Gate (src.config.GEDAI_GATE_THRESHOLD_PCT, our criterion): mean ROI beta
     removed over GEDAI_GATE_SUBJECTS, whole recording, configured settings.
     Sensitivity: the node's own broadband multiplier
@@ -26,7 +32,7 @@ Manuscript
     Methods 2.7 (GEDAI exclusion).
 Run
     python scripts/qc/qc_gedai_gate.py [all]   (needs the gedai extra; "all" = every
-    reference subject instead of GEDAI_GATE_SUBJECTS; about 40 min per subject)
+    reference subject instead of GEDAI_GATE_SUBJECTS; about 60 min per subject)
 """
 
 import hashlib
@@ -51,7 +57,9 @@ from src.roi_diagnostics import reference_cohort  # noqa: E402
 from src.spatial_filter import apply_linear_roi, linear_roi_weights  # noqa: E402
 
 SEGMENTS = ("whole", "walking", "standing")
+JOIN_FREE = ("standing_trim", "walking_trim")
 ANNOTATION = {"walking": "CS", "standing": "STAND"}
+JOIN_TRIM_S = 20.0  # s -- removed next to the join in the join-free rows
 
 
 def check_settings() -> None:
@@ -68,28 +76,50 @@ def check_settings() -> None:
 
 
 def segment(raw, name: str):
-    """Return the whole recording or its walking / standing segment."""
-    return raw if name == "whole" else annotation_segment(raw, ANNOTATION[name])
+    """Return the whole recording, a segment, or a segment without JOIN_TRIM_S at the join."""
+    if name == "whole":
+        return raw
+    return trimmed(annotation_segment(raw, ANNOTATION[name.removesuffix("_trim")]), name)
 
 
-def removed(before, after) -> dict:
-    """Return the removed fractions (%) between two versions of the same segment."""
+def trimmed(raw, name: str):
+    """Return a segment recording, without JOIN_TRIM_S at the join for the *_trim names."""
+    if name == "standing_trim":
+        return raw.copy().crop(tmax=raw.times[-1] - JOIN_TRIM_S)
+    return raw.copy().crop(tmin=JOIN_TRIM_S) if name == "walking_trim" else raw
+
+
+def removed(before, after, average: str = "mean") -> dict:
+    """Return the removed fractions (%) and absolute ROI beta between two versions of a segment."""
     a, b = after.get_data(picks="eeg"), before.get_data(picks="eeg")
     weights = linear_roi_weights(before.info, center_ch=config.ROI_CENTER_CH)
     psd = [
-        r.compute_psd(fmin=BETA_FMIN, fmax=BETA_FMAX, picks="eeg", verbose=False).get_data()
+        r.compute_psd(
+            fmin=BETA_FMIN, fmax=BETA_FMAX, picks="eeg", average=average, verbose=False
+        ).get_data()
         for r in (before, after)
     ]
     beta_b, beta_a = (float(apply_linear_roi(p, weights).mean()) for p in psd)
     return {
+        "duration_s": float(before.times[-1]),
         "var_removed_pooled_pct": 100 * (1 - a.var() / b.var()),
         "var_removed_channel_mean_pct": 100 * float(np.mean(1 - a.var(1) / b.var(1))),
         "roi_beta_removed_pct": 100 * (1 - beta_a / beta_b),
+        "roi_beta_before": beta_b,
+        "roi_beta_after": beta_a,
     }
 
 
+def row(subject: str, mult: float, name: str, fit: str, average: str) -> dict:
+    """Return the identifying columns of one table row."""
+    return {
+        "subject": subject, "broadband_multiplier": mult, "segment": name, "fit": fit,
+        "welch_average": average,
+    }  # fmt: skip
+
+
 def subject_rows(subject: str, raw_dir) -> list[dict]:
-    """All segments x both broadband multipliers for one subject."""
+    """All segments x both broadband multipliers, then the join-free and separate-fit rows."""
     raw = load_and_concatenate(subject, raw_dir)
     kw = {
         "highpass_hz": config.REFERENCE_HIGHPASS_HZ, "lowpass_hz": config.REFERENCE_LOWPASS_HZ,
@@ -104,7 +134,23 @@ def subject_rows(subject: str, raw_dir) -> list[dict]:
         )
         for name in SEGMENTS:
             stats = removed(segment(before, name), segment(after, name))
-            rows.append({"subject": subject, "broadband_multiplier": mult, "segment": name} | stats)
+            rows.append(row(subject, mult, name, "whole", "mean") | stats)
+        if mult == config.GEDAI_SETTINGS["broadband_noise_multiplier"]:
+            for name in JOIN_FREE:
+                for avg in ("mean", "median"):
+                    stats = removed(segment(before, name), segment(after, name), avg)
+                    rows.append(row(subject, mult, name, "whole", avg) | stats)
+    del before, after
+    mult = config.GEDAI_SETTINGS["broadband_noise_multiplier"]
+    for seg_name, desc in ANNOTATION.items():
+        seg = annotation_segment(raw, desc)
+        seg.set_annotations(seg.annotations[[a["description"] == desc for a in seg.annotations]])
+        before = preprocess_raw(seg.copy(), subject, use_gedai=False, **kw)
+        after = preprocess_raw(seg.copy(), subject, use_gedai=True, **kw)
+        for name in (seg_name, f"{seg_name}_trim"):
+            for avg in ("mean", "median"):
+                stats = removed(trimmed(before, name), trimmed(after, name), avg)
+                rows.append(row(subject, mult, name, "separate", avg) | stats)
     return rows
 
 
@@ -113,7 +159,9 @@ def report(table: pd.DataFrame, gate_subjects: list[str], minutes: float) -> lis
     node = hashlib.sha256(open(gedai_node.__file__, "rb").read()).hexdigest()
     base = config.GEDAI_SETTINGS["broadband_noise_multiplier"]
     gate = table[(table.segment == "whole") & (table.broadband_multiplier == base)
+                 & (table.fit == "whole") & (table.welch_average == "mean")
                  & table.subject.isin(gate_subjects)]["roi_beta_removed_pct"].mean()  # fmt: skip
+    show = table.drop(columns=["roi_beta_before", "roi_beta_after", "duration_s"])
     ok = gate <= config.GEDAI_GATE_THRESHOLD_PCT
     lines = [
         "GEDAI GATE CHECK (treadmill)",
@@ -127,18 +175,22 @@ def report(table: pd.DataFrame, gate_subjects: list[str], minutes: float) -> lis
         "GEDAI before the average reference",
         "Metrics: % removed = 100 * (1 - after / before); variance pooled over channels and "
         "samples, and mean of per-channel fractions; ROI beta = linear Cz ROI of the Welch PSD, "
-        "13-30 Hz",
+        "13-30 Hz; fit = GEDAI on the whole recording or on each segment alone; *_trim = "
+        f"without {JOIN_TRIM_S:g} s at the join; absolute ROI beta before / after (V^2/Hz) "
+        "in stepup_gedai_gate.tsv",
         f"Subjects: {', '.join(table.subject.unique())}  ({minutes:.0f} min)",
         "",
-        table.to_string(index=False, float_format=lambda v: f"{v:.2f}"),
+        show.to_string(index=False, float_format=lambda v: f"{v:.2f}"),
         "",
     ]
-    for (seg, mult), g in table.groupby(["segment", "broadband_multiplier"], sort=False):
+    keys = ["segment", "broadband_multiplier", "fit", "welch_average"]
+    for (seg, mult, fit, avg), g in table.groupby(keys, sort=False):
+        beta = g.roi_beta_removed_pct
         lines.append(
-            f"Mean {seg:<8} multiplier {mult:g}: variance pooled "
+            f"Mean {seg:<13} multiplier {mult:g} fit {fit:<8} {avg:<6}: variance pooled "
             f"{g.var_removed_pooled_pct.mean():.2f} %, "
             f"per channel {g.var_removed_channel_mean_pct.mean():.2f} %, ROI beta "
-            f"{g.roi_beta_removed_pct.mean():.2f} %  (n = {len(g)})"
+            f"{beta.mean():.2f} % (range {beta.min():.2f}-{beta.max():.2f}, n = {len(g)})"
         )
     lines += [
         "",
@@ -162,7 +214,7 @@ def main() -> None:
         print(f"sub-{s} done ({(time.time() - t0) / 60:.1f} min)", flush=True)
     table = pd.DataFrame(rows)
     table.to_csv(config.DIR_QC / "stepup_gedai_gate.tsv", sep="\t", index=False,
-                 float_format="%.4f", lineterminator="\n")  # fmt: skip
+                 float_format="%.6g", lineterminator="\n")  # fmt: skip
     lines = report(table, gate_subjects, (time.time() - t0) / 60)
     (config.DIR_QC / "stepup_gedai_gate_check.txt").write_text("\n".join(lines) + "\n")
     print("\n".join(lines))
